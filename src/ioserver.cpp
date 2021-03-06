@@ -68,7 +68,6 @@ int IOServer::sread(int fd, void *target, int len) {
    return 1;
 }
 
-
 void IOServer::start(void) {
 
 	while(true) {
@@ -226,9 +225,6 @@ bool IOServer::handleData(int fd) {
          std::cout << "IOServer: reading data failed " << std::endl;
          return 1;
       }
-
-      // performance issue ???
-		// memset(result, 0, nbytes);
 
 		if (verbose) {
 			std::cout << "IOServer: number of bits " << nbits << std::endl;

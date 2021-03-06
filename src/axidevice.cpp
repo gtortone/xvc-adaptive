@@ -2,10 +2,12 @@
 
 AXIDevice::AXIDevice() {
 	 
+   calibration = true;
+
 	fd = open("/dev/uio0", O_RDWR);
 
    if (fd < 1) {
-		std::cout << "AXIDevice: failed to open UIO device" << std::endl;
+		std::cout << "E: AXIDevice: failed to open UIO device" << std::endl;
       exit(-1);
    }
 
@@ -25,7 +27,6 @@ void AXIDevice::setClockDiv(int v) {
    clkdiv = v; 
    ptr->tck_ratio_div2_min1_offset = clkdiv;
 };
-
 
 void AXIDevice::shift(int nbits, unsigned char *buffer, unsigned char *result) {
 	
@@ -86,7 +87,7 @@ void AXIDevice::shift(int nbits, unsigned char *buffer, unsigned char *result) {
 		bitsLeft -= 32;
 		byteIndex += 4;
 
-      if(verbose) {
+      if(debug) {
 		   printf("LEN : 0x%08x\n", len);
          printf("TMS : 0x%08x\n", *tms);
          printf("TDI : 0x%08x\n", *tdi);

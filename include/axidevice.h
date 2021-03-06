@@ -15,8 +15,7 @@
 
 #define MAP_SIZE	0x10000
 
-typedef struct
-{
+typedef struct {
    uint32_t length_offset;
    uint32_t tms_offset;
    uint32_t tdi_offset;
@@ -34,17 +33,11 @@ public:
 
    void setDelay(int v);
    void setClockDiv(int v);
-
 	void shift(int nbits, unsigned char *buffer, unsigned char *result);
-
 
 private:
 	int fd;
 	volatile jtag_t *ptr;
-
-   int delay;
-   int clkdiv;
-
 };
 
 #endif
