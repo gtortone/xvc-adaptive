@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
    dev.get()->startCalibration();
    dev.get()->printCalibrationList();
    //dev.get()->setCalibrationById(0);
-   //dev.get()->setCalibrationByClock(550000);
+   dev.get()->setCalibrationByClock(8500000);      // 8.5 MHz
    //
 
    printf("Listening....\n");

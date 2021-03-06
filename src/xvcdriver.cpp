@@ -41,8 +41,7 @@ int XVCDriver::getIdCode(void) {
 void XVCDriver::startCalibration(void) {
 
    if(!hasCalibration()) {
-      if(verbose)
-         std::cout << "E: device does not support calibration" << std::endl;
+      std::cout << "E: device does not support calibration" << std::endl;
       return;
    }
 
@@ -121,8 +120,7 @@ void XVCDriver::startCalibration(void) {
 void XVCDriver::printCalibrationList(void) {
    
    if(!hasCalibration()) {
-      if(verbose)
-         std::cout << "E: device does not support calibration" << std::endl;
+      std::cout << "E: device does not support calibration" << std::endl;
       return;
    }
 
@@ -135,8 +133,7 @@ void XVCDriver::printCalibrationList(void) {
 bool XVCDriver::setCalibrationById(int id) {
 
    if(!hasCalibration()) {
-      if(verbose)
-         std::cout << "E: device does not support calibration" << std::endl;
+      std::cout << "E: device does not support calibration" << std::endl;
       return false;
    }
    
@@ -168,12 +165,13 @@ bool XVCDriver::setCalibrationById(int id) {
 void XVCDriver::setCalibrationByClock(int freq) {
 
    if(!hasCalibration()) {
-      if(verbose)
-         std::cout << "E: device does not support calibration" << std::endl;
+      std::cout << "E: device does not support calibration" << std::endl;
+      return;
    }
 
    unsigned int i = 0;
    int id = 0;
+   int index = 0;
    int delta = 0;
    bool init = false;
 
@@ -189,13 +187,14 @@ void XVCDriver::setCalibrationByClock(int freq) {
       if(delta > abs(freq - calibList[i].clkFreq)) {
          delta = abs(freq - calibList[i].clkFreq);
          id = calibList[i].id;
+         index = i;
       }
    }
 
-   setDelay(calibList[i].clkDelay);
-   setClockDiv(calibList[i].clkDiv);
+   setDelay(calibList[index].clkDelay);
+   setClockDiv(calibList[index].clkDiv);
 
    if(verbose) 
       printf("XVCDriver::setCalibrationByClock id found req(%d) delta(%d): id:%d DIV:%d DLY:%d CLK:%d\n", 
-            freq, delta, id, calibList[id].clkDiv, calibList[id].clkDelay, calibList[id].clkFreq);
+            freq, delta, id, calibList[index].clkDiv, calibList[index].clkDelay, calibList[index].clkFreq);
 }
