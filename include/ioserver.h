@@ -23,7 +23,7 @@ private:
 	struct sockaddr_in address;
 	fd_set conn;
 	int port = 2542;
-	int vectorLength = 2048;
+	int vectorLength = 32768;
 
 	XVCDriver *drv;
 

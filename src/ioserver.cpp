@@ -4,34 +4,6 @@ IOServer::IOServer(XVCDriver *driver) {
 
 	drv = driver;
 	setVectorLength(vectorLength);
-
-	sock = socket(AF_INET, SOCK_STREAM, 0);
-
-	if(sock < 0) {
-		std::cout << "IOServer: socket error" << std::endl;
-		exit(1);
-	}
-
-	int value = 1;
-	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &value, sizeof value);
-
-	address.sin_addr.s_addr = INADDR_ANY;
-	address.sin_port = htons(port);
-	address.sin_family = AF_INET;
-
-	if(bind(sock, (struct sockaddr *)&address, sizeof(address)) < 0) {
-		std::cout << "IOServer: bind error" << std::endl;
-		exit(1);
-	}
-
-	if(listen(sock, 1) < 0) {
-		std::cout << "IOServer: listen error" << std::endl;
-		exit(1);
-	}
-
-	FD_ZERO(&conn);
-	FD_SET(sock, &conn);
-	maxfd = sock;
 }
 
 void IOServer::setVectorLength(int v) {
@@ -70,13 +42,41 @@ int IOServer::sread(int fd, void *target, int len) {
 
 void IOServer::start(void) {
 
+	sock = socket(AF_INET, SOCK_STREAM, 0);
+
+	if(sock < 0) {
+		std::cout << "E: IOServer: socket error" << std::endl;
+		exit(1);
+	}
+
+	int value = 1;
+	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &value, sizeof value);
+
+	address.sin_addr.s_addr = INADDR_ANY;
+	address.sin_port = htons(port);
+	address.sin_family = AF_INET;
+
+	if(bind(sock, (struct sockaddr *)&address, sizeof(address)) < 0) {
+		std::cout << "E: IOServer: bind error" << std::endl;
+		exit(1);
+	}
+
+	if(listen(sock, 1) < 0) {
+		std::cout << "E: IOServer: listen error" << std::endl;
+		exit(1);
+	}
+
+	FD_ZERO(&conn);
+	FD_SET(sock, &conn);
+	maxfd = sock;
+
 	while(true) {
 
 		fd_set read = conn, except = conn;
 		int fd;
 
 		if (select(maxfd + 1, &read, 0, &except, 0) < 0) {
-			std::cout << "IOServer: select error" << std::endl;
+			std::cout << "E: IOServer: select error" << std::endl;
 			exit(1);
 		}
 
@@ -96,7 +96,7 @@ void IOServer::start(void) {
 
 					if (newfd < 0) {
 
-						std::cout << "IOServer: accept error" << std::endl;
+						std::cout << "E: IOServer: accept error" << std::endl;
 					
 					} else {
 
@@ -104,7 +104,7 @@ void IOServer::start(void) {
 						int optResult = setsockopt(newfd, IPPROTO_TCP, TCP_NODELAY, (char *)&flag, sizeof(int));
 
 						if (optResult < 0)
-							std::cout << "IOServer: TCP_NODELAY error" << std::endl;
+							std::cout << "E: IOServer: TCP_NODELAY error" << std::endl;
 
 						if (newfd > maxfd) 
 							maxfd = newfd;
@@ -156,7 +156,7 @@ bool IOServer::handleData(int fd) {
 			memcpy(result, xvcInfo.c_str(), xvcInfo.length());
 
          if (write(fd, result, xvcInfo.length()) != (ssize_t)(xvcInfo.length())) {
-            std::cout << "IOServer: reply error" << std::endl;
+            std::cout << "E: IOServer: reply error" << std::endl;
             return 1;
          }
 
@@ -175,12 +175,11 @@ bool IOServer::handleData(int fd) {
          memcpy(result, cmd + 5, 4);
 
          if (write(fd, result, 4) != 4) {
-            std::cout << "IOServer: reply error" << std::endl;
+            std::cout << "E: IOServer: reply error" << std::endl;
             return 1;
          }
 
-         if (verbose)
-         {
+         if (verbose) {
             std::cout << "IOServer: received command: 'settck' " << (int)time(NULL) << std::endl;
             std::cout << "IOServer: replied with " << result << std::endl;
          }
@@ -199,7 +198,8 @@ bool IOServer::handleData(int fd) {
       
 		} else {
 
-			std::cout << "IOServer: invalid command " << cmd << std::endl;
+         if(verbose)
+			   std::cout << "IOServer: invalid command " << cmd << std::endl;
 			return 1;
 		}
 
@@ -208,7 +208,7 @@ bool IOServer::handleData(int fd) {
 		int nbits;
 		if (sread(fd, &nbits, 4) != 1) {
 
-         std::cout << "IOServer: reading length failed " << std::endl;
+         std::cout << "E: IOServer: reading length failed " << std::endl;
          return 1;
       }
 
@@ -217,12 +217,12 @@ bool IOServer::handleData(int fd) {
          std::cout << "IOServer: nbytes = " << nbytes << std::endl;
 
       if (nbytes * 2 > vectorLength) {
-         std::cout << "IOServer: buffer size exceeded - requested: " << nbytes * 2 << " max: " << vectorLength << std::endl;
+         std::cout << "E: IOServer: buffer size exceeded - requested: " << nbytes * 2 << " max: " << vectorLength << std::endl;
          return 1;
       }
 
       if (sread(fd, buffer, nbytes * 2) != 1) {
-         std::cout << "IOServer: reading data failed " << std::endl;
+         std::cout << "E: IOServer: reading data failed " << std::endl;
          return 1;
       }
 
@@ -234,7 +234,7 @@ bool IOServer::handleData(int fd) {
 		drv->shift(nbits, buffer, result);
 		
 		if (write(fd, result, nbytes) != nbytes) 
-			std::cout << "IOServer: failed to write data to client" << std::endl;
+			std::cout << "E: IOServer: failed to write data to client" << std::endl;
 
 	} // end while
 

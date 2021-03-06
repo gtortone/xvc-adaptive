@@ -3,18 +3,22 @@
 
 #include <iostream>
 #include <stdio.h>
-#include <list>
+#include <vector>
 
 /*
 	XVCDriver is an abstract class to specialize with a driver that use hardware 
 	primitives to send/receive TMS,TDI/TDO to a device
 */
 
+#define  MAX_CLOCK_DIV     255
+#define  MAX_CLOCK_DELAY   1024
+
 typedef struct {
    int id;
    int clkDiv;
    int clkDelay;
    int clkFreq;
+   int validPoints;
 } calibItem;
 
 class XVCDriver {
@@ -35,7 +39,8 @@ public:
 
    void startCalibration(void);
    void printCalibrationList(void);
-   bool setCalibrationParams(int id);
+   bool setCalibrationById(int id);
+   void setCalibrationByClock(int freq);
 
 protected:
    bool debug = false;
@@ -45,7 +50,7 @@ protected:
    int clkdiv;
 
 private:
-   std::list<calibItem> calibList;
+   std::vector<calibItem> calibList;
 };
 
 #endif

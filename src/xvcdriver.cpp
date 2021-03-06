@@ -51,7 +51,7 @@ void XVCDriver::startCalibration(void) {
 
 	// read id code at low clock frequency
 	setDelay(0);
-	setClockDiv(255);
+	setClockDiv(MAX_CLOCK_DIV);
 	int refIdCode = getIdCode();
 	if(verbose)
 		printf("XVCDriver::startCalibration reference idcode: 0x%X\n", refIdCode);
@@ -60,35 +60,38 @@ void XVCDriver::startCalibration(void) {
    int cdiv = 0;     // clock divisor
    int cdel = 0;     // clock delay
    int cfreq;        // clock frequency
+   int validPoints;  // consecutive valid measurements
    calibItem cal;
 
    int minDelay, maxDelay;
 
-   for(cdiv=0; cdiv<256; cdiv++) {
+   for(cdiv=MAX_CLOCK_DIV; cdiv>0; cdiv--) {
 
       setClockDiv(cdiv);
 
       minDelay = -1;
       maxDelay = -1;
+      validPoints = 0;
 		cfreq = 100000000 / ((cdiv + 1) * 2);
 
-		for(cdel=0; cdel<128; cdel++) {
+		for(cdel=0; cdel<MAX_CLOCK_DELAY; cdel++) {
 
 			setDelay(cdel);
 
 			int idcode = getIdCode();
 
-			if(idcode != refIdCode) {
-				
-				if(verbose)
-					printf("XVCDriver::startCalibration idcode mismatch - ref(%X) read(%X) - clkdelay: %d - clkdiv: %d - clkfreq: %d",
-                     refIdCode, idcode, cdel, cdiv, cfreq);
-			} else {
+         if(idcode == refIdCode) {
 
-            if(minDelay == -1)
+            if(verbose)
+               printf("XVCDriver::startCalibration idcode OK - clkdelay: %d - clkdiv: %d - clkfreq: %d\n",
+                  cdel, cdiv, cfreq);
+
+            if(minDelay == -1) {
                minDelay = cdel;
+            }
 
             maxDelay = cdel;
+            validPoints++;
          }
 
 		}	// end for loop (clock delay)
@@ -97,11 +100,17 @@ void XVCDriver::startCalibration(void) {
          
          cal.id = id++;
          cal.clkDiv = cdiv;
-         cal.clkDelay = (maxDelay - minDelay)/2;
+         cal.clkDelay = (minDelay == maxDelay)?minDelay:(maxDelay + minDelay) / 2;
          cal.clkFreq = cfreq;
+         cal.validPoints = validPoints;
+
+         if(verbose)
+            printf("XVCDriver::startCalibration idcode OK - clkdelay: %d - clkdiv: %d - clkfreq: %d - points: %d\n",
+                  cal.clkDelay, cal.clkDiv, cal.clkFreq, cal.validPoints);
 
          calibList.push_back(cal);
-      }
+
+      } else break;           // it is no useful to continue with higher frequency
 
    } // end for loop (clock divisor)
 
@@ -117,13 +126,13 @@ void XVCDriver::printCalibrationList(void) {
       return;
    }
 
-   std::list<calibItem>::iterator it;
+   std::vector<calibItem>::iterator it;
 
    for(it=calibList.begin(); it!=calibList.end(); it++)
-      printf("id:%d DIV:%d DLY:%d CLK:%d\n", it->id, it->clkDiv, it->clkDelay, it->clkFreq);
+      printf("id:%d DIV:%d DLY:%d CLK:%d VALID:%d\n", it->id, it->clkDiv, it->clkDelay, it->clkFreq, it->validPoints);
 }
 
-bool XVCDriver::setCalibrationParams(int id) {
+bool XVCDriver::setCalibrationById(int id) {
 
    if(!hasCalibration()) {
       if(verbose)
@@ -131,26 +140,62 @@ bool XVCDriver::setCalibrationParams(int id) {
       return false;
    }
    
-   std::list<calibItem>::iterator it;
    bool found = false;
+   unsigned int i=0;
 
-   for(it=calibList.begin(); it!=calibList.end(); it++) {
+   for(i=0; i<calibList.size(); i++) {
 
-      if(it->id == id) {
+      if(calibList[i].id == id) {
 
          found = true;
-         setDelay(it->clkDelay);
-         setClockDiv(it->clkDiv);
+         setDelay(calibList[i].clkDelay);
+         setClockDiv(calibList[i].clkDiv);
          break;
       }
    }
 
    if(verbose) {
       if(found)
-         printf("XVCDriver::setCalibrationParams id found: id:%d DIV:%d DLY:%d CLK:%d\n", it->id, it->clkDiv, it->clkDelay, it->clkFreq);
+         printf("XVCDriver::setCalibrationById id found: id:%d DIV:%d DLY:%d CLK:%d\n", 
+               calibList[i].id, calibList[i].clkDiv, calibList[i].clkDelay, calibList[i].clkFreq);
       else
-         printf("XVCDriver::setCalibrationParams id not found: id:%d\n", id);
+         printf("XVCDriver::setCalibrationById id not found: id:%d\n", id);
    }
 
    return found;
+}
+
+void XVCDriver::setCalibrationByClock(int freq) {
+
+   if(!hasCalibration()) {
+      if(verbose)
+         std::cout << "E: device does not support calibration" << std::endl;
+   }
+
+   unsigned int i = 0;
+   int id = 0;
+   int delta = 0;
+   bool init = false;
+
+   for(i=0; i<calibList.size(); i++) {
+      
+      if (!init) {
+         init = true;
+         id = calibList[i].id;
+         delta = abs(freq - calibList[i].clkFreq);
+         continue;
+      }
+
+      if(delta > abs(freq - calibList[i].clkFreq)) {
+         delta = abs(freq - calibList[i].clkFreq);
+         id = calibList[i].id;
+      }
+   }
+
+   setDelay(calibList[i].clkDelay);
+   setClockDiv(calibList[i].clkDiv);
+
+	if(verbose) 
+   	printf("XVCDriver::setCalibrationByClock id found req(%d) delta(%d): id:%d DIV:%d DLY:%d CLK:%d\n", 
+				freq, delta, id, calibList[id].clkDiv, calibList[id].clkDelay, calibList[id].clkFreq);
 }
