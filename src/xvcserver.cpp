@@ -15,9 +15,9 @@ int main(int argc, char **argv) {
    int c;
 
    dev.reset(new AXIDevice());
-	IOServer *srv = new IOServer(dev.get());
+   IOServer *srv = new IOServer(dev.get());
 
-	std::cout << "Xilinx Virtual Cable (XVC) adaptive server" << std::endl;
+   std::cout << "Xilinx Virtual Cable (XVC) adaptive server" << std::endl;
 
    while( (c = getopt(argc, argv, "vdhp:")) != -1 ) {
 
@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
    // apply command line parameters
    dev.get()->setDebug(debug);
    dev.get()->setVerbose(verbose);
-	srv->setVerbose(verbose);
+   srv->setVerbose(verbose);
    srv->setPort(port);
 
    // test methods
@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
    //
 
    printf("Listening....\n");
-	srv->start();
+   srv->start();
 
-	return 0;
+   return 0;
 }

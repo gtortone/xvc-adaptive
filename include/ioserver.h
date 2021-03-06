@@ -1,7 +1,7 @@
 #ifndef IOSERVER_H
 #define IOSERVER_H
 
-#include <string>       	
+#include <string>          
 #include <iostream>
 #include <sstream>
 #include <netinet/in.h>
@@ -12,36 +12,36 @@
 #include "xvcdriver.h"
 
 /*
-	IOServer opens TCP connection for XVC server and use XVCDriver to shift in/out buffers
+   IOServer opens TCP connection for XVC server and use XVCDriver to shift in/out buffers
 */
 
 class IOServer {
 
 private:
-	bool verbose = false;
-	int sock, maxfd;
-	struct sockaddr_in address;
-	fd_set conn;
-	int port = 2542;
-	int vectorLength = 32768;
+   bool verbose = false;
+   int sock, maxfd;
+   struct sockaddr_in address;
+   fd_set conn;
+   int port = 2542;
+   int vectorLength = 32768;
 
-	XVCDriver *drv;
+   XVCDriver *drv;
 
-	bool handleData(int fd);
-	std::string xvcInfo;
+   bool handleData(int fd);
+   std::string xvcInfo;
 
    unsigned char *buffer, *result;
 
-	int sread(int fd, void *target, int len);
-	
+   int sread(int fd, void *target, int len);
+   
 public:
-	IOServer(XVCDriver *driver);
-	~IOServer();
+   IOServer(XVCDriver *driver);
+   ~IOServer();
 
-	void start(void);
-	void setPort(int p) { port = p; }
-	void setVerbose(bool v) { verbose = v; }
-	void setVectorLength(int v);
+   void start(void);
+   void setPort(int p) { port = p; }
+   void setVerbose(bool v) { verbose = v; }
+   void setVectorLength(int v);
 };
 
 #endif

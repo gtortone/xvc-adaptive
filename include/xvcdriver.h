@@ -6,8 +6,8 @@
 #include <vector>
 
 /*
-	XVCDriver is an abstract class to specialize with a driver that use hardware 
-	primitives to send/receive TMS,TDI/TDO to a device
+   XVCDriver is an abstract class to specialize with a driver that use hardware 
+   primitives to send/receive TMS,TDI/TDO to a device
 */
 
 #define  MAX_CLOCK_DIV     255
@@ -24,8 +24,8 @@ typedef struct {
 class XVCDriver {
 
 public:
-	XVCDriver() {};
-	~XVCDriver() {};
+   XVCDriver() {};
+   ~XVCDriver() {};
 
    void setDebug(bool v) { debug = v; };
    void setVerbose(bool v) { verbose = v; };
@@ -34,7 +34,7 @@ public:
    virtual void setDelay(int v) = 0;
    virtual void setClockDiv(int v) = 0;
 
-	virtual void shift(int nbits, unsigned char *buffer, unsigned char *result) = 0;
+   virtual void shift(int nbits, unsigned char *buffer, unsigned char *result) = 0;
    int getIdCode(void);
 
    void startCalibration(void);

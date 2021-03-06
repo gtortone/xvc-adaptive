@@ -2,7 +2,7 @@
 
 int XVCDriver::getIdCode(void) {
 
-	unsigned char buffer[8];
+   unsigned char buffer[8];
    unsigned char result[4];
    int *idcode;
    int nbits;
@@ -49,12 +49,12 @@ void XVCDriver::startCalibration(void) {
    // reset previous calibration
    calibList.clear();
 
-	// read id code at low clock frequency
-	setDelay(0);
-	setClockDiv(MAX_CLOCK_DIV);
-	int refIdCode = getIdCode();
-	if(verbose)
-		printf("XVCDriver::startCalibration reference idcode: 0x%X\n", refIdCode);
+   // read id code at low clock frequency
+   setDelay(0);
+   setClockDiv(MAX_CLOCK_DIV);
+   int refIdCode = getIdCode();
+   if(verbose)
+      printf("XVCDriver::startCalibration reference idcode: 0x%X\n", refIdCode);
   
    int id = 0;       // calibration id
    int cdiv = 0;     // clock divisor
@@ -72,13 +72,13 @@ void XVCDriver::startCalibration(void) {
       minDelay = -1;
       maxDelay = -1;
       validPoints = 0;
-		cfreq = 100000000 / ((cdiv + 1) * 2);
+      cfreq = 100000000 / ((cdiv + 1) * 2);
 
-		for(cdel=0; cdel<MAX_CLOCK_DELAY; cdel++) {
+      for(cdel=0; cdel<MAX_CLOCK_DELAY; cdel++) {
 
-			setDelay(cdel);
+         setDelay(cdel);
 
-			int idcode = getIdCode();
+         int idcode = getIdCode();
 
          if(idcode == refIdCode) {
 
@@ -94,7 +94,7 @@ void XVCDriver::startCalibration(void) {
             validPoints++;
          }
 
-		}	// end for loop (clock delay)
+      }  // end for loop (clock delay)
 
       if(minDelay != -1) {    // we found a valid clkdelay/clkdiv combination...
          
@@ -195,7 +195,7 @@ void XVCDriver::setCalibrationByClock(int freq) {
    setDelay(calibList[i].clkDelay);
    setClockDiv(calibList[i].clkDiv);
 
-	if(verbose) 
-   	printf("XVCDriver::setCalibrationByClock id found req(%d) delta(%d): id:%d DIV:%d DLY:%d CLK:%d\n", 
-				freq, delta, id, calibList[id].clkDiv, calibList[id].clkDelay, calibList[id].clkFreq);
+   if(verbose) 
+      printf("XVCDriver::setCalibrationByClock id found req(%d) delta(%d): id:%d DIV:%d DLY:%d CLK:%d\n", 
+            freq, delta, id, calibList[id].clkDiv, calibList[id].clkDelay, calibList[id].clkFreq);
 }

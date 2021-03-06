@@ -2,24 +2,24 @@
 
 IOServer::IOServer(XVCDriver *driver) {
 
-	drv = driver;
-	setVectorLength(vectorLength);
+   drv = driver;
+   setVectorLength(vectorLength);
 }
 
 void IOServer::setVectorLength(int v) {
 
-	vectorLength = v;
+   vectorLength = v;
 
    free(buffer);
    free(result);
 
-	buffer = (unsigned char *) malloc(sizeof(char) * vectorLength);
-	result = (unsigned char *) malloc(sizeof(char) * vectorLength/2);
+   buffer = (unsigned char *) malloc(sizeof(char) * vectorLength);
+   result = (unsigned char *) malloc(sizeof(char) * vectorLength/2);
 
-	xvcInfo.clear();
-	xvcInfo = "xvcServer_v1.0:";
-	xvcInfo.append(std::to_string(vectorLength));
-	xvcInfo.append("\n");
+   xvcInfo.clear();
+   xvcInfo = "xvcServer_v1.0:";
+   xvcInfo.append(std::to_string(vectorLength));
+   xvcInfo.append("\n");
 }
 
 int IOServer::sread(int fd, void *target, int len) {
@@ -42,118 +42,118 @@ int IOServer::sread(int fd, void *target, int len) {
 
 void IOServer::start(void) {
 
-	sock = socket(AF_INET, SOCK_STREAM, 0);
+   sock = socket(AF_INET, SOCK_STREAM, 0);
 
-	if(sock < 0) {
-		std::cout << "E: IOServer: socket error" << std::endl;
-		exit(1);
-	}
+   if(sock < 0) {
+      std::cout << "E: IOServer: socket error" << std::endl;
+      exit(1);
+   }
 
-	int value = 1;
-	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &value, sizeof value);
+   int value = 1;
+   setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &value, sizeof value);
 
-	address.sin_addr.s_addr = INADDR_ANY;
-	address.sin_port = htons(port);
-	address.sin_family = AF_INET;
+   address.sin_addr.s_addr = INADDR_ANY;
+   address.sin_port = htons(port);
+   address.sin_family = AF_INET;
 
-	if(bind(sock, (struct sockaddr *)&address, sizeof(address)) < 0) {
-		std::cout << "E: IOServer: bind error" << std::endl;
-		exit(1);
-	}
+   if(bind(sock, (struct sockaddr *)&address, sizeof(address)) < 0) {
+      std::cout << "E: IOServer: bind error" << std::endl;
+      exit(1);
+   }
 
-	if(listen(sock, 1) < 0) {
-		std::cout << "E: IOServer: listen error" << std::endl;
-		exit(1);
-	}
+   if(listen(sock, 1) < 0) {
+      std::cout << "E: IOServer: listen error" << std::endl;
+      exit(1);
+   }
 
-	FD_ZERO(&conn);
-	FD_SET(sock, &conn);
-	maxfd = sock;
+   FD_ZERO(&conn);
+   FD_SET(sock, &conn);
+   maxfd = sock;
 
-	while(true) {
+   while(true) {
 
-		fd_set read = conn, except = conn;
-		int fd;
+      fd_set read = conn, except = conn;
+      int fd;
 
-		if (select(maxfd + 1, &read, 0, &except, 0) < 0) {
-			std::cout << "E: IOServer: select error" << std::endl;
-			exit(1);
-		}
+      if (select(maxfd + 1, &read, 0, &except, 0) < 0) {
+         std::cout << "E: IOServer: select error" << std::endl;
+         exit(1);
+      }
 
-		for (fd = 0; fd <= maxfd; fd++) {
+      for (fd = 0; fd <= maxfd; fd++) {
 
-			if (FD_ISSET(fd, &read)) {
+         if (FD_ISSET(fd, &read)) {
 
-				if (fd == sock) {
+            if (fd == sock) {
 
-					int newfd;
-					socklen_t nsize = sizeof(address);
+               int newfd;
+               socklen_t nsize = sizeof(address);
 
-					newfd = accept(sock, (struct sockaddr *)&address, &nsize);
+               newfd = accept(sock, (struct sockaddr *)&address, &nsize);
 
-					if (verbose)
-						std::cout << "IOServer: connection accepted - fd " << newfd << std::endl;
+               if (verbose)
+                  std::cout << "IOServer: connection accepted - fd " << newfd << std::endl;
 
-					if (newfd < 0) {
+               if (newfd < 0) {
 
-						std::cout << "E: IOServer: accept error" << std::endl;
-					
-					} else {
+                  std::cout << "E: IOServer: accept error" << std::endl;
+               
+               } else {
 
-						int flag = 1;
-						int optResult = setsockopt(newfd, IPPROTO_TCP, TCP_NODELAY, (char *)&flag, sizeof(int));
+                  int flag = 1;
+                  int optResult = setsockopt(newfd, IPPROTO_TCP, TCP_NODELAY, (char *)&flag, sizeof(int));
 
-						if (optResult < 0)
-							std::cout << "E: IOServer: TCP_NODELAY error" << std::endl;
+                  if (optResult < 0)
+                     std::cout << "E: IOServer: TCP_NODELAY error" << std::endl;
 
-						if (newfd > maxfd) 
-							maxfd = newfd;
+                  if (newfd > maxfd) 
+                     maxfd = newfd;
 
-						FD_SET(newfd, &conn);
-					}
-				
-				} else if (handleData(fd)) {
+                  FD_SET(newfd, &conn);
+               }
+            
+            } else if (handleData(fd)) {
 
-					if (verbose)
-						std::cout << "IOServer: connection closed - fd " << fd << std::endl;
+               if (verbose)
+                  std::cout << "IOServer: connection closed - fd " << fd << std::endl;
 
-					close(fd);
+               close(fd);
 
-					FD_CLR(fd, &conn);
-				}
-			
-			} else if (FD_ISSET(fd, &except)) {
+               FD_CLR(fd, &conn);
+            }
+         
+         } else if (FD_ISSET(fd, &except)) {
 
-				if (verbose)
-					std::cout << "IOServer: connection aborted - fd " << fd << std::endl;
+            if (verbose)
+               std::cout << "IOServer: connection aborted - fd " << fd << std::endl;
 
-				close(fd);
-				FD_CLR(fd, &conn);
+            close(fd);
+            FD_CLR(fd, &conn);
 
-				if (fd == sock)
-					break;
-			}
-		} // end for
-	} // end while
+            if (fd == sock)
+               break;
+         }
+      } // end for
+   } // end while
 }
 
 bool IOServer::handleData(int fd) {
 
-	char cmd[16];
+   char cmd[16];
 
-	while(true) {
+   while(true) {
 
-		memset(cmd, 0, 16);
+      memset(cmd, 0, 16);
 
-		if (sread(fd, cmd, 2) != 1)
+      if (sread(fd, cmd, 2) != 1)
          return 1;
 
-		if (memcmp(cmd, "ge", 2) == 0) {
+      if (memcmp(cmd, "ge", 2) == 0) {
 
          if (sread(fd, cmd, 6) != 1)
             return 1;
-			
-			memcpy(result, xvcInfo.c_str(), xvcInfo.length());
+         
+         memcpy(result, xvcInfo.c_str(), xvcInfo.length());
 
          if (write(fd, result, xvcInfo.length()) != (ssize_t)(xvcInfo.length())) {
             std::cout << "E: IOServer: reply error" << std::endl;
@@ -162,12 +162,12 @@ bool IOServer::handleData(int fd) {
 
          if (verbose) {
             std::cout << "IOServer: received command: 'getinfo' " << (int)time(NULL) << std::endl;
-				std::cout << "IOServer: replied with " << xvcInfo << std::endl;
+            std::cout << "IOServer: replied with " << xvcInfo << std::endl;
          }
 
          break;
-		
-		} else if (memcmp(cmd, "se", 2) == 0) {
+      
+      } else if (memcmp(cmd, "se", 2) == 0) {
 
          if (sread(fd, cmd, 9) != 1)
             return 1;
@@ -186,27 +186,27 @@ bool IOServer::handleData(int fd) {
 
          break;
       
-		} else if (memcmp(cmd, "sh", 2) == 0) {
+      } else if (memcmp(cmd, "sh", 2) == 0) {
 
          if (sread(fd, cmd, 4) != 1)
             return 1;
 
          if (verbose)
-				std::cout << "IOServer: received command: 'shift' " << (int)time(NULL) << std::endl;
+            std::cout << "IOServer: received command: 'shift' " << (int)time(NULL) << std::endl;
 
-			// we will shift payload after...
+         // we will shift payload after...
       
-		} else {
+      } else {
 
          if(verbose)
-			   std::cout << "IOServer: invalid command " << cmd << std::endl;
-			return 1;
-		}
+            std::cout << "IOServer: invalid command " << cmd << std::endl;
+         return 1;
+      }
 
-		// shift payload
+      // shift payload
 
-		int nbits;
-		if (sread(fd, &nbits, 4) != 1) {
+      int nbits;
+      if (sread(fd, &nbits, 4) != 1) {
 
          std::cout << "E: IOServer: reading length failed " << std::endl;
          return 1;
@@ -226,17 +226,17 @@ bool IOServer::handleData(int fd) {
          return 1;
       }
 
-		if (verbose) {
-			std::cout << "IOServer: number of bits " << nbits << std::endl;
-			std::cout << "IOServer: number of bytes " << nbytes << std::endl;
+      if (verbose) {
+         std::cout << "IOServer: number of bits " << nbits << std::endl;
+         std::cout << "IOServer: number of bytes " << nbytes << std::endl;
       }
 
-		drv->shift(nbits, buffer, result);
-		
-		if (write(fd, result, nbytes) != nbytes) 
-			std::cout << "E: IOServer: failed to write data to client" << std::endl;
+      drv->shift(nbits, buffer, result);
+      
+      if (write(fd, result, nbytes) != nbytes) 
+         std::cout << "E: IOServer: failed to write data to client" << std::endl;
 
-	} // end while
+   } // end while
 
-	return 0;
+   return 0;
 }
