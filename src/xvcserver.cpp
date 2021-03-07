@@ -15,13 +15,13 @@ int main(int argc, const char **argv) {
    int debugLevel = 0;
    int port = 2542;
 
-	static const char *const usage[] = {
-    	"xvcserver [options]",
-		NULL,
-	};
+   static const char *const usage[] = {
+      "xvcserver [options]",
+      NULL,
+   };
 
-	struct argparse_option options[] = {
-   	OPT_HELP(),
+   struct argparse_option options[] = {
+      OPT_HELP(),
       OPT_GROUP("Basic options"),
       OPT_BOOLEAN('v', "verbose", &verbose, "enable verbose"),
       OPT_INTEGER('d', "debug", &debugLevel, "set debug level (default: 0)"),
@@ -30,10 +30,10 @@ int main(int argc, const char **argv) {
       OPT_END(),
    };
 
-	struct argparse argparse;
+   struct argparse argparse;
    argparse_init(&argparse, options, usage, 0);
    argparse_describe(&argparse, "\nXilinx Virtual Cable (XVC) adaptive server", "");
-	argparse_parse(&argparse, argc, argv);
+   argparse_parse(&argparse, argc, argv);
 
    dev.reset(new AXIDevice());
    IOServer *srv = new IOServer(dev.get());
