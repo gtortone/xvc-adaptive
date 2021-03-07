@@ -6,6 +6,7 @@
 #include "argparse.h"
 #include "ioserver.h"
 #include "axidevice.h"
+#include "ftdidevice.h"
 #include "devicedb.h"
 
 int main(int argc, const char **argv) {
@@ -19,6 +20,7 @@ int main(int argc, const char **argv) {
    int cdiv = -1;
    int cdel = -1;
    bool quickSetup = false;
+   const char *driverName = "AXI";
 
    static const char *const usage[] = {
       "xvcserver [options]",
@@ -30,6 +32,8 @@ int main(int argc, const char **argv) {
       OPT_GROUP("Basic options"),
       OPT_BOOLEAN('v', "verbose", &verbose, "enable verbose"),
       OPT_INTEGER('d', "debug", &debugLevel, "set debug level (default: 0)"),
+      OPT_GROUP("Driver options"),
+      OPT_STRING(0, "driver", &driverName, "set driver name [AXI,FTDI] (default: AXI)", NULL, 0, 0),
       OPT_GROUP("Calibration options"),
       OPT_STRING('s', "savecalib", &saveFilename, "start calibration and save data to file", NULL, 0, 0),
       OPT_STRING('l', "loadcalib", &loadFilename, "load calibration data from file", NULL, 0, 0),
@@ -46,7 +50,18 @@ int main(int argc, const char **argv) {
    argparse_describe(&argparse, "\nXilinx Virtual Cable (XVC) adaptive server", "");
    argparse_parse(&argparse, argc, argv);
 
-   dev.reset(new AXIDevice());
+   if(std::string(driverName) == "AXI") {
+      dev.reset(new AXIDevice());
+   } else if(std::string(driverName) == "FTDI") {
+      dev.reset(new FTDIDevice());
+      //std::cout << "E: driver FTDI not supported yet" << std::endl;
+      //exit(-1);
+   } else {
+      std::cout << "E: driver " << driverName << " not found" << std::endl;
+      exit(-1);
+   }
+   
+   std::cout << "I: using driver " << driverName << std::endl;
    IOServer *srv = new IOServer(dev.get());
 
    // apply command line parameters
@@ -55,37 +70,43 @@ int main(int argc, const char **argv) {
    srv->setVerbose(verbose);
 
    if(saveFilename) {
-      std::cout << "I: start calibration task" << std::endl;
-      // calibration does not start XVC server
-      dev.get()->startCalibration();
-      // save calibration data to file
-      std::cout << "I: calibration data saved in " << saveFilename << std::endl; 
-      exit(0);
+      if(dev.get()->hasCalibration()) {
+         std::cout << "I: start calibration task" << std::endl;
+         // calibration does not start XVC server
+         dev.get()->startCalibration();
+         // save calibration data to file
+         std::cout << "I: calibration data saved in " << saveFilename << std::endl; 
+         exit(0);
+      } else std::cout << "E: calibration not supported by driver " << driverName << std::endl;
    }
  
    if(cdiv != -1) {
-      if(cdiv <= MAX_CLOCK_DIV) {
-         quickSetup = true;
-         std::cout << "I: apply clock divisor " << cdiv << std::endl;
-         dev.get()->setClockDiv(cdiv);
-      } else {
-         std::cout << "E: clock divisor out of range: " << cdiv << std::endl;
-         exit(-1);
-      }
+      if(dev.get()->hasCalibration()) {
+         if(cdiv <= MAX_CLOCK_DIV) {
+            quickSetup = true;
+            std::cout << "I: apply clock divisor " << cdiv << std::endl;
+            dev.get()->setClockDiv(cdiv);
+         } else {
+            std::cout << "E: clock divisor out of range: " << cdiv << std::endl;
+            exit(-1);
+         }
+      } else std::cout << "E: clock divisor parameter not supported by driver " << driverName << std::endl;
    }
 
 	if(cdel != -1) {
-      if(cdel <= MAX_CLOCK_DELAY) {
-         quickSetup = true;
-         std::cout << "I: apply clock delay " << cdel << std::endl;
-         dev.get()->setDelay(cdel);
-      } else {
-         std::cout << "E: clock delay out of range: " << cdel << std::endl;
-         exit(-1);
-      }
+      if(dev.get()->hasCalibration()) {
+         if(cdel <= MAX_CLOCK_DELAY) {
+            quickSetup = true;
+            std::cout << "I: apply clock delay " << cdel << std::endl;
+            dev.get()->setDelay(cdel);
+         } else {
+            std::cout << "E: clock delay out of range: " << cdel << std::endl;
+            exit(-1);
+         }
+      } else std::cout << "E: clock delay parameter not supported by driver " << driverName << std::endl;
    }
 
-	if(quickSetup) {
+	if(quickSetup && dev.get()->hasCalibration()) {
 		std::cout << "I: manual setup used - skip other setup options" << std::endl;
 		goto startServer; 
 	}
