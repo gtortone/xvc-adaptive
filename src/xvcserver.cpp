@@ -3,69 +3,48 @@
 #include <memory>
 #include <unistd.h>
 
+#include "argparse.h"
 #include "ioserver.h"
 #include "axidevice.h"
 #include "devicedb.h"
 
-int main(int argc, char **argv) {
+int main(int argc, const char **argv) {
 
    std::unique_ptr<XVCDriver> dev;
-   int width = 15;
    bool verbose = false;
-   bool debug = false;
+   int debugLevel = 0;
    int port = 2542;
-   int c;
+
+	static const char *const usage[] = {
+    	"xvcserver [options]",
+		NULL,
+	};
+
+	struct argparse_option options[] = {
+   	OPT_HELP(),
+      OPT_GROUP("Basic options"),
+      OPT_BOOLEAN('v', "verbose", &verbose, "enable verbose"),
+      OPT_INTEGER('d', "debug", &debugLevel, "set debug level (default: 0)"),
+      OPT_GROUP("Network options"),
+      OPT_INTEGER('p', "port", &port, "set server port (default: 2542)"),
+      OPT_END(),
+   };
+
+	struct argparse argparse;
+   argparse_init(&argparse, options, usage, 0);
+   argparse_describe(&argparse, "\nXilinx Virtual Cable (XVC) adaptive server", "");
+	argparse_parse(&argparse, argc, argv);
 
    dev.reset(new AXIDevice());
    IOServer *srv = new IOServer(dev.get());
 
-   std::cout << "Xilinx Virtual Cable (XVC) adaptive server" << std::endl;
-
-   while( (c = getopt(argc, argv, "vdhp:")) != -1 ) {
-
-      switch(c) { 
-
-         case 'v':
-            std::cout << "I: verbose enabled" << std::endl;
-            verbose = true;
-            break;
-
-         case 'd':
-            std::cout << "I: debug enabled" << std::endl;
-            debug = true;
-            break;
-
-         case 'h':
-            std::cout << std::left << "Usage: " << basename(argv[0]) << " [OPTION]" << std::endl << std::endl;
-            
-            std::cout << std::left << "Network parameters" << std::endl;
-            std::cout << std::left << std::setw(width) << "-p <port>" << "set server port (default: 2542)" << std::endl;
-            std::cout << std::endl;
-
-            std::cout << std::left << "General parameters" << std::endl;
-            std::cout << std::left << std::setw(width) << "-v" << "enable verbose" << std::endl; 
-            std::cout << std::left << std::setw(width) << "-d" << "enable debug" << std::endl; 
-            std::cout << std::left << std::setw(width) << "-h" << "print usage" << std::endl; 
-            std::cout << std::endl;
-            exit(0);
-            break;
-         
-         case 'p':
-            if(atoi(optarg) != 0) {
-               port = atoi(optarg);
-               std::cout << "I: using TCP port " << port << std::endl;
-            } else std::cout << "E: TCP port not valid - using default" << std::endl; 
-            break;
-
-         default:
-            exit(-1);
-      }
-   }
-
    // apply command line parameters
-   dev.get()->setDebug(debug);
+   dev.get()->setDebugLevel(debugLevel);
    dev.get()->setVerbose(verbose);
    srv->setVerbose(verbose);
+ 
+   if(port != 2542)
+      std::cout << "I: using TCP port " << port << std::endl;
    srv->setPort(port);
 
    dev.get()->startCalibration();

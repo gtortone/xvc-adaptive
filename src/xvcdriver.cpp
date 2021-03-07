@@ -3,7 +3,14 @@
 XVCDriver::XVCDriver(void) {
 }
 
+void XVCDriver::printDebug(std::string msg, int lvl) {
+   if (debugLevel >= lvl)
+      std::cout << msg << std::endl;
+}
+
 const char* XVCDriver::detectDevice(void) {
+
+   printDebug("XVCDriver::detectDevice start", 1);
 
    DeviceDB devDB(0);
    uint32_t tempId;
@@ -24,10 +31,14 @@ const char* XVCDriver::detectDevice(void) {
       }
    }
    
+   printDebug("XVCDriver::detectDevice end", 1);
+
    return nullptr; 
 }
 
 uint32_t XVCDriver::probeIdCode(void) {
+
+   printDebug("XVCDriver::probeIdCode start", 1);
 
    unsigned char buffer[8];
    unsigned char result[4];
@@ -62,10 +73,13 @@ uint32_t XVCDriver::probeIdCode(void) {
 
    idcode = reinterpret_cast<uint32_t *>(result);
 
+   printDebug("XVCDriver::probeIdCode end", 1);
    return *idcode; 
 }
 
 void XVCDriver::startCalibration(void) {
+
+   printDebug("XVCDriver::startCalibration start", 1);
 
    const char *devDesc;
 
@@ -88,9 +102,6 @@ void XVCDriver::startCalibration(void) {
 
    std::cout << "I: calibration started" << std::endl;
 
-   if(verbose)
-      printf("XVCDriver::startCalibration reference idcode: 0x%X\n", refIdCode);
-  
    int id = 0;       // calibration id
    int cdiv = 0;     // clock divisor
    int cdel = 0;     // clock delay
@@ -99,8 +110,16 @@ void XVCDriver::startCalibration(void) {
    calibItem cal;
 
    int minDelay, maxDelay;
+   int currIter = 0;
+   int interval = 5;
 
    for(cdiv=MAX_CLOCK_DIV; cdiv>0; cdiv--) {
+
+      currIter = float(MAX_CLOCK_DIV - cdiv) / MAX_CLOCK_DIV * 100;
+      if(currIter >= interval) {
+         std::cout << interval << "%..." << std::flush;
+         interval += 5;
+      }
 
       setClockDiv(cdiv);
 
@@ -117,9 +136,11 @@ void XVCDriver::startCalibration(void) {
 
          if(idcode == refIdCode) {
 
-            if(verbose)
-               printf("XVCDriver::startCalibration idcode OK - clkdelay: %d - clkdiv: %d - clkfreq: %d\n",
-                  cdel, cdiv, cfreq);
+            if(debugLevel) {
+               char msg[128];
+               sprintf(msg, "XVCDriver::startCalibration: idcode OK - clkdelay: %d - clkdiv: %d - clkfreq: %d", cdel, cdiv, cfreq);
+               printDebug(msg, 2);
+            }
 
             if(minDelay == -1) {
                minDelay = cdel;
@@ -139,20 +160,32 @@ void XVCDriver::startCalibration(void) {
          cal.clkFreq = cfreq;
          cal.validPoints = validPoints;
 
-         if(verbose)
-            printf("XVCDriver::startCalibration idcode OK - clkdelay: %d - clkdiv: %d - clkfreq: %d - points: %d\n",
+         if(debugLevel) {
+            char msg[128];
+            sprintf(msg, "XVCDriver::startCalibration: idcode OK - clkdelay: %d - clkdiv: %d - clkfreq: %d - points: %d",
                   cal.clkDelay, cal.clkDiv, cal.clkFreq, cal.validPoints);
+            printDebug(msg, 2);
+         }
 
          calibList.push_back(cal);
 
-      } else break;           // it is no useful to continue with higher frequency
+      } else {
+
+         // it is no useful to continue with higher frequency
+         std::cout << std::endl;
+         std::cout << "I: clock frequency equal or higher " << cfreq << " Hz skipped" << std::endl;
+         break;           
+      }
 
    } // end for loop (clock divisor)
 
+   printDebug("XVCDriver::startCalibration end", 1);
    std::cout << "I: calibration finished" << std::endl;
 }
 
 void XVCDriver::printCalibrationList(void) {
+
+   printDebug("XVCDriver::printCalibrationList start", 1);
    
    if(!hasCalibration()) {
       std::cout << "E: device does not support calibration" << std::endl;
@@ -163,9 +196,13 @@ void XVCDriver::printCalibrationList(void) {
 
    for(it=calibList.begin(); it!=calibList.end(); it++)
       printf("id:%d DIV:%d DLY:%d CLK:%d VALID:%d\n", it->id, it->clkDiv, it->clkDelay, it->clkFreq, it->validPoints);
+
+   printDebug("XVCDriver::printCalibrationList end", 1);
 }
 
 bool XVCDriver::setCalibrationById(int id) {
+
+   printDebug("XVCDriver::setCalibrationById start", 1);
 
    if(!hasCalibration()) {
       std::cout << "E: device does not support calibration" << std::endl;
@@ -194,10 +231,14 @@ bool XVCDriver::setCalibrationById(int id) {
          printf("XVCDriver::setCalibrationById id not found: id:%d\n", id);
    }
 
+   printDebug("XVCDriver::setCalibrationById end", 1);
+
    return found;
 }
 
 void XVCDriver::setCalibrationByClock(int freq) {
+
+   printDebug("XVCDriver::setCalibrationByClock start", 1);
 
    if(!hasCalibration()) {
       std::cout << "E: device does not support calibration" << std::endl;
@@ -232,4 +273,6 @@ void XVCDriver::setCalibrationByClock(int freq) {
    if(verbose) 
       printf("XVCDriver::setCalibrationByClock id found req(%d) delta(%d): id:%d DIV:%d DLY:%d CLK:%d\n", 
             freq, delta, id, calibList[index].clkDiv, calibList[index].clkDelay, calibList[index].clkFreq);
+
+   printDebug("XVCDriver::setCalibrationByClock end", 1);
 }

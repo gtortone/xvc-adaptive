@@ -87,11 +87,10 @@ void AXIDevice::shift(int nbits, unsigned char *buffer, unsigned char *result) {
       bitsLeft -= 32;
       byteIndex += 4;
 
-      if(debug) {
-         printf("LEN : 0x%08x\n", len);
-         printf("TMS : 0x%08x\n", *tms);
-         printf("TDI : 0x%08x\n", *tdi);
-         printf("TDO : 0x%08x\n", tdo);
+      if(debugLevel) {
+         char msg[128];
+         sprintf(msg, "LEN:%d TMS:0x%08x TDI:0x%08x TDO:0x%08x", len, *tms, *tdi, tdo);
+         printDebug(msg, 3);
       }
 
    } // end while

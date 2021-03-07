@@ -28,7 +28,7 @@ public:
    XVCDriver();
    ~XVCDriver() {};
 
-   void setDebug(bool v) { debug = v; };
+   void setDebugLevel(int lvl) { debugLevel = lvl; };
    void setVerbose(bool v) { verbose = v; };
    bool hasCalibration(void) { return calibration; };
 
@@ -44,11 +44,13 @@ public:
    void setCalibrationByClock(int freq);
 
 protected:
-   bool debug = false;
+   int debugLevel = 0;
    bool verbose = false;
    bool calibration = false;
    int delay;
    int clkdiv;
+
+   void printDebug(std::string msg, int lvl);
 
 private:
    std::vector<calibItem> calibList;
