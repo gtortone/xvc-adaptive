@@ -4,6 +4,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <vector>
+#include "devicedb.h"
 
 /*
    XVCDriver is an abstract class to specialize with a driver that use hardware 
@@ -24,7 +25,7 @@ typedef struct {
 class XVCDriver {
 
 public:
-   XVCDriver() {};
+   XVCDriver();
    ~XVCDriver() {};
 
    void setDebug(bool v) { debug = v; };
@@ -35,7 +36,7 @@ public:
    virtual void setClockDiv(int v) = 0;
 
    virtual void shift(int nbits, unsigned char *buffer, unsigned char *result) = 0;
-   int getIdCode(void);
+   const char* detectDevice(void);
 
    void startCalibration(void);
    void printCalibrationList(void);
@@ -51,6 +52,8 @@ protected:
 
 private:
    std::vector<calibItem> calibList;
+   uint32_t probeIdCode(void);
+   uint32_t refIdCode;
 };
 
 #endif

@@ -2,8 +2,10 @@
 #include <iomanip>
 #include <memory>
 #include <unistd.h>
+
 #include "ioserver.h"
 #include "axidevice.h"
+#include "devicedb.h"
 
 int main(int argc, char **argv) {
 
@@ -66,11 +68,10 @@ int main(int argc, char **argv) {
    srv->setVerbose(verbose);
    srv->setPort(port);
 
-   // test methods
    dev.get()->startCalibration();
-   dev.get()->printCalibrationList();
+   //dev.get()->printCalibrationList();
    //dev.get()->setCalibrationById(0);
-   dev.get()->setCalibrationByClock(8500000);      // 8.5 MHz
+   //dev.get()->setCalibrationByClock(8500000);      // 8.5 MHz
    //
 
    printf("Listening....\n");

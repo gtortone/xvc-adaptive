@@ -1,10 +1,37 @@
 #include "xvcdriver.h"
 
-int XVCDriver::getIdCode(void) {
+XVCDriver::XVCDriver(void) {
+}
+
+const char* XVCDriver::detectDevice(void) {
+
+   DeviceDB devDB(0);
+   uint32_t tempId;
+   const char *tempDesc;
+
+   // read id code at low clock frequency with delay sweep
+   setClockDiv(MAX_CLOCK_DIV);
+
+   for(int cdel=0; cdel<MAX_CLOCK_DELAY; cdel++) {
+
+      setDelay(cdel);
+      tempId = probeIdCode();
+      tempDesc = devDB.idToDescription(tempId);
+
+      if (tempDesc) {
+         refIdCode = tempId;
+         return tempDesc;
+      }
+   }
+   
+   return nullptr; 
+}
+
+uint32_t XVCDriver::probeIdCode(void) {
 
    unsigned char buffer[8];
    unsigned char result[4];
-   int *idcode;
+   uint32_t *idcode;
    int nbits;
 
    buffer[0] = 0xFF;
@@ -33,12 +60,14 @@ int XVCDriver::getIdCode(void) {
    nbits = 32;
    shift(nbits, buffer, result);
 
-   idcode = reinterpret_cast<int*>(result);
+   idcode = reinterpret_cast<uint32_t *>(result);
 
    return *idcode; 
 }
 
 void XVCDriver::startCalibration(void) {
+
+   const char *devDesc;
 
    if(!hasCalibration()) {
       std::cout << "E: device does not support calibration" << std::endl;
@@ -48,10 +77,17 @@ void XVCDriver::startCalibration(void) {
    // reset previous calibration
    calibList.clear();
 
-   // read id code at low clock frequency
-   setDelay(0);
-   setClockDiv(MAX_CLOCK_DIV);
-   int refIdCode = getIdCode();
+   // detect id code 
+   devDesc = detectDevice();
+   if(devDesc)
+      std::cout << "I: detected device: " << devDesc << std::endl;
+   else {
+      std::cout << "E: no device detected" << std::endl;
+      return;
+   }
+
+   std::cout << "I: calibration started" << std::endl;
+
    if(verbose)
       printf("XVCDriver::startCalibration reference idcode: 0x%X\n", refIdCode);
   
@@ -77,7 +113,7 @@ void XVCDriver::startCalibration(void) {
 
          setDelay(cdel);
 
-         int idcode = getIdCode();
+         uint32_t idcode = probeIdCode();
 
          if(idcode == refIdCode) {
 
@@ -113,8 +149,7 @@ void XVCDriver::startCalibration(void) {
 
    } // end for loop (clock divisor)
 
-   if(verbose)
-      printf("XVCDriver::startCalibration calibration done\n");
+   std::cout << "I: calibration finished" << std::endl;
 }
 
 void XVCDriver::printCalibrationList(void) {
