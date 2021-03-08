@@ -8,6 +8,7 @@
 #include "axidevice.h"
 #include "ftdidevice.h"
 #include "axicalibrator.h"
+#include "axisetup.h"
 
 int main(int argc, const char **argv) {
 
@@ -21,6 +22,9 @@ int main(int argc, const char **argv) {
    int cdel = -1;
    bool quickSetup = false;
    const char *driverName = "AXI";
+   AXISetup *setup = new AXISetup();
+   int id = -1;
+   int freq = -1;
 
    static const char *const usage[] = {
       "xvcserver [options]",
@@ -32,16 +36,18 @@ int main(int argc, const char **argv) {
       OPT_GROUP("Basic options"),
       OPT_BOOLEAN('v', "verbose", &verbose, "enable verbose"),
       OPT_INTEGER('d', "debug", &debugLevel, "set debug level (default: 0)"),
-      OPT_GROUP("Driver options"),
-      OPT_STRING(0, "driver", &driverName, "set driver name [AXI,FTDI] (default: AXI)", NULL, 0, 0),
-      OPT_GROUP("Calibration options"),
-      OPT_STRING('s', "savecalib", &saveFilename, "start calibration and save data to file [AXI driver]", NULL, 0, 0),
-      OPT_STRING('l', "loadcalib", &loadFilename, "load calibration data from file [AXI driver]", NULL, 0, 0),
-      OPT_GROUP("Setup options"),
-      OPT_INTEGER(0, "cdiv", &cdiv, "set clock divisor (0:1023) [AXI driver]", NULL, 0, 0),
-      OPT_INTEGER(0, "cdel", &cdel, "set clock delay (0:255) [AXI driver]", NULL, 0, 0),
       OPT_GROUP("Network options"),
       OPT_INTEGER('p', "port", &port, "set server port (default: 2542)"),
+      OPT_GROUP("Driver options"),
+      OPT_STRING(0, "driver", &driverName, "set driver name [AXI,FTDI] (default: AXI)", NULL, 0, 0),
+      OPT_GROUP("AXI Calibration options"),
+      OPT_STRING('s', "savecalib", &saveFilename, "start calibration and save data to file [AXI driver]", NULL, 0, 0),
+      OPT_STRING('l', "loadcalib", &loadFilename, "load calibration data from file [AXI driver]", NULL, 0, 0),
+      OPT_INTEGER(0, "id", &id, "load calibration entry from file by id [AXI driver]"),
+      OPT_INTEGER(0, "freq", &freq, "load calibration entry from file by clock frequency [AXI driver]"),
+      OPT_GROUP("AXI Setup options"),
+      OPT_INTEGER(0, "cdiv", &cdiv, "set clock divisor (0:1023) [AXI driver]", NULL, 0, 0),
+      OPT_INTEGER(0, "cdel", &cdel, "set clock delay (0:255) [AXI driver]", NULL, 0, 0),
       OPT_END(),
    };
 
@@ -67,6 +73,7 @@ int main(int argc, const char **argv) {
    // apply command line parameters
    dev.get()->setDebugLevel(debugLevel);
    dev.get()->setVerbose(verbose);
+   setup->setVerbose(verbose);
    srv->setVerbose(verbose);
 
    if(saveFilename) {
@@ -76,8 +83,9 @@ int main(int argc, const char **argv) {
          AXICalibrator *calib = new AXICalibrator((AXIDevice *) dev.get());
          calib->setDebugLevel(debugLevel);
          calib->setVerbose(verbose);
-         calib->start();
+         calib->start(setup);
          // save calibration data to file
+         setup->saveFile(saveFilename);
          std::cout << "I: calibration data saved in " << saveFilename << std::endl; 
          exit(0);
       } else std::cout << "E: calibration not supported by driver " << driverName << std::endl;
@@ -85,29 +93,19 @@ int main(int argc, const char **argv) {
  
    if(cdiv != -1) {
       if(dev.get()->getName() == "AXI") {
-         if(cdiv <= MAX_CLOCK_DIV) {
-            quickSetup = true;
-            std::cout << "I: apply clock divisor " << cdiv << std::endl;
-            AXIDevice *adev = (AXIDevice *) dev.get();
-            adev->setClockDiv(cdiv);
-         } else {
-            std::cout << "E: clock divisor out of range: " << cdiv << std::endl;
-            exit(-1);
-         }
+         quickSetup = true;
+         std::cout << "I: apply clock divisor " << cdiv << std::endl;
+         AXIDevice *adev = (AXIDevice *) dev.get();
+         adev->setClockDiv(cdiv);
       } else std::cout << "E: clock divisor parameter not supported by driver " << driverName << std::endl;
    }
 
 	if(cdel != -1) {
       if(dev.get()->getName() == "AXI") {
-         if(cdel <= MAX_CLOCK_DELAY) {
-            quickSetup = true;
-            std::cout << "I: apply clock delay " << cdel << std::endl;
-            AXIDevice *adev = (AXIDevice *) dev.get();
-            adev->setClockDelay(cdel);
-         } else {
-            std::cout << "E: clock delay out of range: " << cdel << std::endl;
-            exit(-1);
-         }
+         quickSetup = true;
+         std::cout << "I: apply clock delay " << cdel << std::endl;
+         AXIDevice *adev = (AXIDevice *) dev.get();
+         adev->setClockDelay(cdel);
       } else std::cout << "E: clock delay parameter not supported by driver " << driverName << std::endl;
    }
 
@@ -117,7 +115,44 @@ int main(int argc, const char **argv) {
 	}
 
    if(loadFilename) {
-      //
+
+      if(dev.get()->getName() != "AXI") {
+         std::cout << "E: setup options only available for AXI device" << std::endl;
+         exit(-1);
+      }
+
+      if((id == -1) && (freq == -1)) {
+         std::cout << "E: specify setup item to load by --id or --freq options" << std::endl;
+         exit(-1);
+      }
+
+      setup->clear();
+      bool ret = setup->loadFile(loadFilename);
+      if(ret) {
+         std::cout << "I: file " << loadFilename << " loaded successfully" << std::endl;
+         // check for id or freq command line options
+         if(id != -1) {
+            AXICalibItem *item = setup->getItemById(id);
+            if(item != nullptr) {
+               AXIDevice *adev = (AXIDevice *) dev.get();
+               adev->setClockDelay(item->clkDelay);
+               adev->setClockDiv(item->clkDiv);
+               std::cout << "I: AXI setup with id " << id << " successfully (DIV:" << item->clkDiv << 
+                  " DLY:" << item->clkDelay << ")" << std::endl;
+            } else std::cout << "E: setup item with id " << id << " not found" << std::endl;
+         }
+         if(freq != -1) {
+            AXICalibItem *item = setup->getItemByFrequency(freq);
+            AXIDevice *adev = (AXIDevice *) dev.get();
+            adev->setClockDelay(item->clkDelay);
+            adev->setClockDiv(item->clkDiv);
+            std::cout << "I: AXI setup with id " << item->id << " successfully (DIV:" << item->clkDiv << 
+               " DLY:" << item->clkDelay << " FREQ:" << item->clkFreq << ")" << std::endl;
+         }
+      } else { 
+         std::cout << "E: file " << loadFilename << " loading error" << std::endl;
+         exit(-1);
+      }
    }
 
 startServer:

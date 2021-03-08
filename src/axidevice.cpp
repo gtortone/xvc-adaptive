@@ -19,13 +19,17 @@ AXIDevice::~AXIDevice() {
 }
 
 void AXIDevice::setClockDelay(int v) { 
-   clkdel = v;
-   ptr->delay_offset = clkdel;
+   if(v <= MAX_CLOCK_DELAY) {
+      clkdel = v;
+      ptr->delay_offset = clkdel;
+   } else std::cout << "E: clock delay out of range: " << v << std::endl;
 };
 
 void AXIDevice::setClockDiv(int v) { 
-   clkdiv = v;
-   ptr->tck_ratio_div2_min1_offset = clkdiv;
+   if(v <= MAX_CLOCK_DIV) {
+      clkdiv = v;
+      ptr->tck_ratio_div2_min1_offset = clkdiv;
+   } else std::cout << "E: clock divisor out of range: " << v << std::endl;
 };
 
 void AXIDevice::shift(int nbits, unsigned char *buffer, unsigned char *result) {
