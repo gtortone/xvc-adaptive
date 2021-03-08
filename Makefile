@@ -19,7 +19,7 @@ INCLUDE_LIB_DIRS =
 INCLUDE_LIB = $(foreach includedir,$(INCLUDE_LIB_DIRS),-L$(includedir))
 
 # Set compiler, preprocesor and linker flags
-CPPFLAGS += -O3 -Wall 
+CPPFLAGS += -O3 -Wall -Wno-unused-result
 LDFLAGS += $(INCLUDE_LIB)
 LDLIBS += 
 
