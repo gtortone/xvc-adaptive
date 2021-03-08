@@ -7,7 +7,7 @@
 #include "ioserver.h"
 #include "axidevice.h"
 #include "ftdidevice.h"
-#include "devicedb.h"
+#include "axicalibrator.h"
 
 int main(int argc, const char **argv) {
 
@@ -35,11 +35,11 @@ int main(int argc, const char **argv) {
       OPT_GROUP("Driver options"),
       OPT_STRING(0, "driver", &driverName, "set driver name [AXI,FTDI] (default: AXI)", NULL, 0, 0),
       OPT_GROUP("Calibration options"),
-      OPT_STRING('s', "savecalib", &saveFilename, "start calibration and save data to file", NULL, 0, 0),
-      OPT_STRING('l', "loadcalib", &loadFilename, "load calibration data from file", NULL, 0, 0),
+      OPT_STRING('s', "savecalib", &saveFilename, "start calibration and save data to file [AXI driver]", NULL, 0, 0),
+      OPT_STRING('l', "loadcalib", &loadFilename, "load calibration data from file [AXI driver]", NULL, 0, 0),
       OPT_GROUP("Setup options"),
-      OPT_INTEGER(0, "cdiv", &cdiv, "set clock divisor [0:1023]", NULL, 0, 0),
-      OPT_INTEGER(0, "cdel", &cdel, "set clock delay [0:255]", NULL, 0, 0),
+      OPT_INTEGER(0, "cdiv", &cdiv, "set clock divisor (0:1023) [AXI driver]", NULL, 0, 0),
+      OPT_INTEGER(0, "cdel", &cdel, "set clock delay (0:255) [AXI driver]", NULL, 0, 0),
       OPT_GROUP("Network options"),
       OPT_INTEGER('p', "port", &port, "set server port (default: 2542)"),
       OPT_END(),
@@ -54,8 +54,8 @@ int main(int argc, const char **argv) {
       dev.reset(new AXIDevice());
    } else if(std::string(driverName) == "FTDI") {
       dev.reset(new FTDIDevice());
-      //std::cout << "E: driver FTDI not supported yet" << std::endl;
-      //exit(-1);
+      std::cout << "E: driver FTDI not supported yet" << std::endl;
+      exit(-1);
    } else {
       std::cout << "E: driver " << driverName << " not found" << std::endl;
       exit(-1);
@@ -70,10 +70,13 @@ int main(int argc, const char **argv) {
    srv->setVerbose(verbose);
 
    if(saveFilename) {
-      if(dev.get()->hasCalibration()) {
+      if(dev.get()->getName() == "AXI") {
          std::cout << "I: start calibration task" << std::endl;
          // calibration does not start XVC server
-         dev.get()->startCalibration();
+         AXICalibrator *calib = new AXICalibrator((AXIDevice *) dev.get());
+         calib->setDebugLevel(debugLevel);
+         calib->setVerbose(verbose);
+         calib->start();
          // save calibration data to file
          std::cout << "I: calibration data saved in " << saveFilename << std::endl; 
          exit(0);
@@ -81,11 +84,12 @@ int main(int argc, const char **argv) {
    }
  
    if(cdiv != -1) {
-      if(dev.get()->hasCalibration()) {
+      if(dev.get()->getName() == "AXI") {
          if(cdiv <= MAX_CLOCK_DIV) {
             quickSetup = true;
             std::cout << "I: apply clock divisor " << cdiv << std::endl;
-            dev.get()->setClockDiv(cdiv);
+            AXIDevice *adev = (AXIDevice *) dev.get();
+            adev->setClockDiv(cdiv);
          } else {
             std::cout << "E: clock divisor out of range: " << cdiv << std::endl;
             exit(-1);
@@ -94,11 +98,12 @@ int main(int argc, const char **argv) {
    }
 
 	if(cdel != -1) {
-      if(dev.get()->hasCalibration()) {
+      if(dev.get()->getName() == "AXI") {
          if(cdel <= MAX_CLOCK_DELAY) {
             quickSetup = true;
             std::cout << "I: apply clock delay " << cdel << std::endl;
-            dev.get()->setDelay(cdel);
+            AXIDevice *adev = (AXIDevice *) dev.get();
+            adev->setClockDelay(cdel);
          } else {
             std::cout << "E: clock delay out of range: " << cdel << std::endl;
             exit(-1);
@@ -106,7 +111,7 @@ int main(int argc, const char **argv) {
       } else std::cout << "E: clock delay parameter not supported by driver " << driverName << std::endl;
    }
 
-	if(quickSetup && dev.get()->hasCalibration()) {
+	if(quickSetup && dev.get()->getName() == "AXI") {
 		std::cout << "I: manual setup used - skip other setup options" << std::endl;
 		goto startServer; 
 	}

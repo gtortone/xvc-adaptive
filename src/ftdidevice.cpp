@@ -2,7 +2,7 @@
 
 FTDIDevice::FTDIDevice() {
     
-   calibration = false;
+   setName("FTDI");
 }
 
 FTDIDevice::~FTDIDevice() {

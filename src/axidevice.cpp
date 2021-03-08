@@ -2,7 +2,7 @@
 
 AXIDevice::AXIDevice() {
     
-   calibration = true;
+   setName("AXI");
 
    fd = open("/dev/uio0", O_RDWR);
 
@@ -18,13 +18,13 @@ AXIDevice::~AXIDevice() {
    munmap((void *)ptr, MAP_SIZE);
 }
 
-void AXIDevice::setDelay(int v) { 
-   delay = v; 
-   ptr->delay_offset = delay;
+void AXIDevice::setClockDelay(int v) { 
+   clkdel = v;
+   ptr->delay_offset = clkdel;
 };
 
 void AXIDevice::setClockDiv(int v) { 
-   clkdiv = v; 
+   clkdiv = v;
    ptr->tck_ratio_div2_min1_offset = clkdiv;
 };
 

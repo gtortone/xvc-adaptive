@@ -13,7 +13,9 @@
     AXIDevice is a device driver based on AXI4-JTAG IP core
 */
 
-#define MAP_SIZE  0x10000
+#define  MAX_CLOCK_DIV     255
+#define  MAX_CLOCK_DELAY   1024
+#define  MAP_SIZE          0x10000
 
 typedef struct {
    uint32_t length_offset;
@@ -31,13 +33,15 @@ public:
    AXIDevice();
    ~AXIDevice();
 
-   void setDelay(int v);
+   void setClockDelay(int v);
    void setClockDiv(int v);
    void shift(int nbits, unsigned char *buffer, unsigned char *result);
 
 private:
    int fd;
    volatile jtag_t *ptr;
+
+   int clkdiv, clkdel;
 };
 
 #endif
