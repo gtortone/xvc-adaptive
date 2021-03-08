@@ -66,8 +66,11 @@ void AXICalibrator::start(AXISetup *setup) {
    int minDelay, maxDelay;
    int currIter = 0;
    int interval = 5;
+   int hyst = 0;
+   bool record = false;
 
-   for(cdiv=MAX_CLOCK_DIV; cdiv>0; cdiv--) {
+   for(cdiv=MAX_CLOCK_DIV; cdiv>=0; cdiv--) {
+
       currIter = float(MAX_CLOCK_DIV - cdiv) / MAX_CLOCK_DIV * 100;
       if(currIter >= interval) {
          std::cout << interval << "%..." << std::flush;
@@ -79,6 +82,7 @@ void AXICalibrator::start(AXISetup *setup) {
       minDelay = -1;
       maxDelay = -1;
       validPoints = 0;
+      record = false;
       cfreq = 100000000 / ((cdiv + 1) * 2);
 
       for(cdel=0; cdel<MAX_CLOCK_DELAY; cdel++) {
@@ -89,38 +93,51 @@ void AXICalibrator::start(AXISetup *setup) {
 
          if(idcode == refIdCode) {
 
-            if(debugLevel) {
-               char msg[128];
-               sprintf(msg, "AXICalibrator::startCalibration: idcode OK - clkdelay: %d - clkdiv: %d - clkfreq: %d", cdel, cdiv, cfreq);
-               printDebug(msg, 2);
-            }
-
             if(minDelay == -1) {
-               minDelay = cdel;
+
+               if(++hyst >= HYSTERESIS) {
+                  if(debugLevel) {
+                     char msg[128];
+                     sprintf(msg, "AXICalibrator::startCalibration: idcode OK - clkdelay: %d - clkdiv: %d - clkfreq: %d", cdel, cdiv, cfreq);
+                     printDebug(msg, 2);
+                  }
+                  minDelay = cdel;
+                  record = true;
+               }
             }
 
-            maxDelay = cdel;
-            validPoints++;
+            if(record) {
+               maxDelay = cdel;
+               validPoints++;
+            }
+
+         } else if((record) && (minDelay != -1)) { // idcode not valid after a set of valid results...
+            break;
          }
+
       }  // end for loop (clock delay)
 
       if(minDelay != -1) {    // we found a valid clkdelay/clkdiv combination...
 
-         AXICalibItem item;
-         item.id = id++;
-         item.clkDiv = cdiv;
-         item.clkDelay = (minDelay == maxDelay)?minDelay:(maxDelay + minDelay) / 2;
-         item.clkFreq = cfreq;
-         item.validPoints = validPoints;
+         // check if valid is greater then divisor/2
+         if (validPoints >= cdiv/2) {
 
-         if(debugLevel) {
-            char msg[128];
-            sprintf(msg, "AXICalibrator::startCalibration: idcode OK - clkdelay: %d - clkdiv: %d - clkfreq: %d - points: %d",
+            AXICalibItem item;
+            item.id = id++;
+            item.clkDiv = cdiv;
+            item.clkDelay = (minDelay == maxDelay)?minDelay:(maxDelay + minDelay) / 2;
+            item.clkFreq = cfreq;
+            item.validPoints = validPoints;
+
+            if(debugLevel) {
+               char msg[128];
+               sprintf(msg, "AXICalibrator::startCalibration: idcode OK - clkdelay: %d - clkdiv: %d - clkfreq: %d - points: %d",
                   item.clkDelay, item.clkDiv, item.clkFreq, item.validPoints);
-            printDebug(msg, 2);
-         }
+               printDebug(msg, 2);
+            }
 
-         setup->addItem(item);
+            setup->addItem(item);
+         }
 
       } else {
 
