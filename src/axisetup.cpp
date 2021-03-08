@@ -132,3 +132,25 @@ AXICalibItem * AXISetup::getItemByFrequency(int freq) {
    return &calibList[index];
 }
 
+AXICalibItem * AXISetup::getItemByMaxFrequency(void) {
+
+   unsigned int i = 0;
+   int id = 0;
+   int maxfreq = 0;
+   int index = 0;
+
+   for(i=0; i<calibList.size(); i++) {
+
+      if(calibList[i].clkFreq > maxfreq) {
+         maxfreq = calibList[i].clkFreq; 
+         id = calibList[i].id;
+         index = i;
+      }
+   }
+
+   if(verbose)
+      printf("AXISetup::getItemByMaxFrequency found: id:%d DIV:%d DLY:%d CLK:%d\n",
+         id, calibList[index].clkDiv, calibList[index].clkDelay, calibList[index].clkFreq);
+
+   return &calibList[index];
+}

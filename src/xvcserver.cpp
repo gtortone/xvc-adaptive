@@ -121,18 +121,18 @@ int main(int argc, const char **argv) {
          exit(-1);
       }
 
-      if((id == -1) && (freq == -1)) {
-         std::cout << "E: specify setup item to load by --id or --freq options" << std::endl;
-         exit(-1);
-      }
-
       setup->clear();
       bool ret = setup->loadFile(loadFilename);
       if(ret) {
+
+         AXICalibItem *item;
+
          std::cout << "I: file " << loadFilename << " loaded successfully" << std::endl;
-         // check for id or freq command line options
+         
+         // check for id command line options
          if(id != -1) {
-            AXICalibItem *item = setup->getItemById(id);
+         
+            item = setup->getItemById(id);
             if(item != nullptr) {
                AXIDevice *adev = (AXIDevice *) dev.get();
                adev->setClockDelay(item->clkDelay);
@@ -140,15 +140,21 @@ int main(int argc, const char **argv) {
                std::cout << "I: AXI setup with id " << id << " successfully (DIV:" << item->clkDiv << 
                   " DLY:" << item->clkDelay << ")" << std::endl;
             } else std::cout << "E: setup item with id " << id << " not found" << std::endl;
+            goto startServer;
          }
-         if(freq != -1) {
-            AXICalibItem *item = setup->getItemByFrequency(freq);
-            AXIDevice *adev = (AXIDevice *) dev.get();
-            adev->setClockDelay(item->clkDelay);
-            adev->setClockDiv(item->clkDiv);
-            std::cout << "I: AXI setup with id " << item->id << " successfully (DIV:" << item->clkDiv << 
+         
+         // check for freq command line options
+         if(freq != -1)
+            item = setup->getItemByFrequency(freq);
+         else  // select max frequency
+            item = setup->getItemByMaxFrequency();
+
+         AXIDevice *adev = (AXIDevice *) dev.get();
+         adev->setClockDelay(item->clkDelay);
+         adev->setClockDiv(item->clkDiv);
+         std::cout << "I: AXI setup with id " << item->id << " successfully (DIV:" << item->clkDiv << 
                " DLY:" << item->clkDelay << " FREQ:" << item->clkFreq << ")" << std::endl;
-         }
+
       } else { 
          std::cout << "E: file " << loadFilename << " loading error" << std::endl;
          exit(-1);

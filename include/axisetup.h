@@ -31,6 +31,7 @@ public:
    void print(void);
    AXICalibItem * getItemById(int id);
    AXICalibItem * getItemByFrequency(int freq);
+   AXICalibItem * getItemByMaxFrequency(void);
 
 private:
    bool verbose = false;
