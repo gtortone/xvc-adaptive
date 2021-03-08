@@ -17,20 +17,20 @@ class AXISetup {
 
 public:
 
-	AXISetup();
-	~AXISetup();
+   AXISetup();
+   ~AXISetup();
 
    void setVerbose(bool v) { verbose = v; };
-	void addItem(AXICalibItem &item);
-	void clear(void);
+   void addItem(AXICalibItem &item);
+   void clear(void);
 
    bool loadFile(std::string filename);
    bool saveFile(std::string filename);
    bool closeFile(void);
 
    void print(void);
-  	AXICalibItem * getItemById(int id);
-  	AXICalibItem * getItemByFrequency(int freq);
+   AXICalibItem * getItemById(int id);
+   AXICalibItem * getItemByFrequency(int freq);
 
 private:
    bool verbose = false;
