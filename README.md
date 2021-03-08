@@ -2,7 +2,7 @@
 
 Xilinx Virtual Cable (XVC) daemon with calibration features to compensate TDO propagation delay on long cables.
 
-# Usage
+## Usage
 
 ```
 Xilinx Virtual Cable (XVC) adaptive server
