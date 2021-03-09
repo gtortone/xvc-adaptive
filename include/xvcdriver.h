@@ -20,6 +20,7 @@ public:
    void setVerbose(bool v) { verbose = v; };
 
    virtual void shift(int nbits, unsigned char *buffer, unsigned char *result) = 0;
+   uint32_t scanChain(void);
    uint32_t probeIdCode(void);
 
 protected:

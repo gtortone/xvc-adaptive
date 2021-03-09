@@ -23,7 +23,7 @@ const char* AXICalibrator::detectDevice(void) {
    for(int cdel=0; cdel<MAX_CLOCK_DELAY; cdel++) {
 
       dev->setClockDelay(cdel);
-      tempId = dev->probeIdCode();
+      tempId = dev->scanChain();
       tempDesc = devDB.idToDescription(tempId);
 
       if (tempDesc) {
