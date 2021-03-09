@@ -12,39 +12,38 @@ uint32_t XVCDriver::probeIdCode(void) {
 
    printDebug("XVCDriver::probeIdCode start", 1);
 
-   unsigned char buffer[8];
-   unsigned char result[4];
-   uint32_t *idcode;
+   unsigned char buffer[12];
+   unsigned char result[6];
+   uint32_t idcode32;
+   uint64_t *idcode64;
    int nbits;
 
-   buffer[0] = 0xFF;
+   // TMS
+   buffer[0] = 0x5F;			// 0000.0000.0000.0000.0000.0000.0000.0000.0000.0000.0101.1111
    buffer[1] = 0x00;
-   nbits = 5;
+	buffer[2] = 0x00;
+	buffer[3] = 0x00;
+	buffer[4] = 0x00;
+	buffer[5] = 0x00;
+
+   // TDI
+	buffer[6] = 0x00;       // 0000.0001.1111.1111.1111.1111.1111.1111.1111.1110.0000.0000
+	buffer[7] = 0xFE;
+	buffer[8] = 0xFF;
+	buffer[9] = 0xFF;
+	buffer[10] = 0xFF;
+   buffer[11] = 0x01;			
+   
+   nbits = 41;
    shift(nbits, buffer, result);
 
-   buffer[0] = 0x00;
-   buffer[1] = 0x00;
-   nbits = 1;
-   shift(nbits, buffer, result);
+   idcode64 = reinterpret_cast<uint64_t *>(result);
+   idcode32 = (uint32_t) ( (*idcode64 >> 9) & (0xFFFFFFFF) );
 
-   buffer[0] = 0x01;
-   buffer[1] = 0x00;
-   nbits = 3;
-   shift(nbits, buffer, result);
-
-   buffer[0] = 0x00;
-   buffer[1] = 0x00;
-   buffer[2] = 0x00;
-   buffer[3] = 0x00;
-   buffer[4] = 0xFF;
-   buffer[5] = 0xFF;
-   buffer[6] = 0xFF;
-   buffer[7] = 0xFF;
-   nbits = 32;
-   shift(nbits, buffer, result);
-
-   idcode = reinterpret_cast<uint32_t *>(result);
+   char msg[128];
+   sprintf(msg, "XVCDriver::probeIdCode result = 0x%X", idcode32);
+   printDebug(msg, 2);
 
    printDebug("XVCDriver::probeIdCode end", 1);
-   return *idcode; 
+   return idcode32; 
 }

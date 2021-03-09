@@ -40,6 +40,7 @@ void AXIDevice::shift(int nbits, unsigned char *buffer, unsigned char *result) {
    int bitsLeft = nbits;
    int byteIndex = 0;
    int *tdi, *tms, tdo; 
+   int tmsVal, tdiVal;
    int last_tdi, last_tms, last_length;
 
    last_tms = ptr->tms_offset = 0;
@@ -59,14 +60,21 @@ void AXIDevice::shift(int nbits, unsigned char *buffer, unsigned char *result) {
             last_length = 32;
          }
 
+         tms = reinterpret_cast<int*>(&buffer[byteIndex]);
+         tdi = reinterpret_cast<int*>(&buffer[byteIndex + nbytes]);
+
       } else {
 
          len = bytesLeft;
          ptr->length_offset = bitsLeft;
-      }
 
-      tms = reinterpret_cast<int*>(&buffer[byteIndex]);
-      tdi = reinterpret_cast<int*>(&buffer[byteIndex + nbytes]);
+         tmsVal = tdiVal = 0;
+         memcpy(&tmsVal, &buffer[byteIndex], bytesLeft);
+         memcpy(&tdiVal, &buffer[byteIndex + nbytes], bytesLeft);
+
+         tms = &tmsVal;
+         tdi = &tdiVal;
+      }
 
       if (*tms != last_tms)
       {
@@ -87,15 +95,15 @@ void AXIDevice::shift(int nbits, unsigned char *buffer, unsigned char *result) {
       tdo = ptr->tdo_offset;
       memcpy(&result[byteIndex], &tdo, len);
 
+      if(debugLevel) {
+         char msg[128];
+         sprintf(msg, "LEN:%d bits:%d TMS:0x%08x TDI:0x%08x TDO:0x%08x", len, (len==4)?32:bitsLeft, *tms, *tdi, tdo);
+         printDebug(msg, 3);
+      }
+
       bytesLeft -= 4;
       bitsLeft -= 32;
       byteIndex += 4;
-
-      if(debugLevel) {
-         char msg[128];
-         sprintf(msg, "LEN:%d TMS:0x%08x TDI:0x%08x TDO:0x%08x", len, *tms, *tdi, tdo);
-         printDebug(msg, 3);
-      }
 
    } // end while
 }
