@@ -17,48 +17,50 @@ uint32_t XVCDriver::probeIdCode(void) {
    uint32_t *idcode;
    int nbits;
 
-	// TEST-LOGIC-RESET
-  	buffer[0] = 0xFF;
+   // TEST-LOGIC-RESET
+   buffer[0] = 0xFF;
    buffer[1] = 0x00;
    nbits = 5;
    shift(nbits, buffer, result);
 
-	// RUN-TEST/IDLE
-	buffer[0] = 0x00;
+   // RUN-TEST/IDLE
+   buffer[0] = 0x00;
    buffer[1] = 0x00;
    nbits = 1;
    shift(nbits, buffer, result);
 
-	// SHIFT-IR
-	buffer[0] = 0x03;
-	buffer[1] = 0x00;
-	nbits = 4;
-	shift(nbits, buffer, result);
+   // SHIFT-IR
+   buffer[0] = 0x03;
+   buffer[1] = 0x00;
+   nbits = 4;
+   shift(nbits, buffer, result);
 
-	// set IDcode instruction and navigate to EXIT-IR on last bit
-   uint16_t word = 0;
-   word = (1 << irlen);
-	buffer[0] = word & 0x00FF;
-   buffer[1] = (word & 0xFF00) >> 8;
-   word = idcmd;
-	buffer[2] = word & 0x00FF;
-   buffer[3] = (word & 0xFF00) >> 8;
-	nbits = irlen;
-	shift(nbits, buffer, result);
-	 
-	// UPDATE-IR
-	buffer[0] = 0x01;
-	buffer[1] = 0x00;
-	nbits = 2;
-	shift(nbits, buffer, result);
+   // set IDcode instruction and navigate to EXIT-IR on last bit
+   if(irlen <= 8) {
+      buffer[0] = 1 << (irlen-1);
+      buffer[1] = idcmd;
+   } else {
+      buffer[0] = 0x00;
+      buffer[1] = 1 << (irlen-9);
+      buffer[2] = idcmd;
+      buffer[3] = 0x00;
+   }
+   nbits = irlen;
+   shift(nbits, buffer, result);
 
-	// SHIFT-DR
-	buffer[0] =	0x01;
-	buffer[1] = 0x00;
-	nbits = 3;
-	shift(nbits, buffer, result);
+   // UPDATE-IR
+   buffer[0] = 0x01;
+   buffer[1] = 0x00;
+   nbits = 2;
+   shift(nbits, buffer, result);
 
-	buffer[0] = 0x00;
+   // SHIFT-DR
+   buffer[0] = 0x01;
+   buffer[1] = 0x00;
+   nbits = 3;
+   shift(nbits, buffer, result);
+
+   buffer[0] = 0x00;
    buffer[1] = 0x00;
    buffer[2] = 0x00;
    buffer[3] = 0x80;
@@ -69,17 +71,11 @@ uint32_t XVCDriver::probeIdCode(void) {
    nbits = 32;
    shift(nbits, buffer, result);
 
-	idcode = reinterpret_cast<uint32_t *>(result);
+   idcode = reinterpret_cast<uint32_t *>(result);
    
-	// TEST-LOGIC-RESET
-  	buffer[0] = 0xFF;
-   buffer[1] = 0x00;
-   nbits = 5;
-   shift(nbits, buffer, result);
-
    printDebug("XVCDriver::probeIdCode end", 1);
 
-	return *idcode;
+   return *idcode;
 }
 
 uint32_t XVCDriver::scanChain(void) {

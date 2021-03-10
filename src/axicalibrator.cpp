@@ -49,8 +49,6 @@ void AXICalibrator::start(AXISetup *setup) {
 
       for(cdel=0; cdel<MAX_CLOCK_DELAY; cdel++) {
 
-         //std::cout << "cdel = " << cdel << std::endl;
-
          dev->setClockDelay(cdel);
 
          uint32_t idcode = dev->probeIdCode();
