@@ -2,12 +2,14 @@
 #define AXIDEVICE_H
 
 #include <iostream>
+#include <stdexcept>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <string.h>
 #include <unistd.h>
 
 #include "xvcdriver.h"
+#include "devicedb.h"
 
 /*
     AXIDevice is a device driver based on AXI4-JTAG IP core
@@ -33,6 +35,7 @@ public:
    AXIDevice();
    ~AXIDevice();
 
+   bool detect(void);
    void setClockDelay(int v);
    void setClockDiv(int v);
    void shift(int nbits, unsigned char *buffer, unsigned char *result);

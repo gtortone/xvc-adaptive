@@ -4,6 +4,7 @@
 #include <string>          
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <unistd.h>
@@ -30,7 +31,8 @@ private:
    bool handleData(int fd);
    std::string xvcInfo;
 
-   unsigned char *buffer, *result;
+   unsigned char *buffer = nullptr;
+   unsigned char *result = nullptr;
 
    int sread(int fd, void *target, int len);
    

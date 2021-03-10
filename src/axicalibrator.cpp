@@ -9,51 +9,12 @@ void AXICalibrator::printDebug(std::string msg, int lvl) {
       std::cout << msg << std::endl;
 }
 
-const char* AXICalibrator::detectDevice(void) {
-
-   printDebug("AXICalibrator::detectDevice start", 1);
-
-   DeviceDB devDB(0);
-   uint32_t tempId;
-   const char *tempDesc;
-
-   // read id code at low clock frequency with delay sweep
-   dev->setClockDiv(MAX_CLOCK_DIV);
-
-   for(int cdel=0; cdel<MAX_CLOCK_DELAY; cdel++) {
-
-      dev->setClockDelay(cdel);
-      tempId = dev->scanChain();
-      tempDesc = devDB.idToDescription(tempId);
-
-      if (tempDesc) {
-         refIdCode = tempId;
-         return tempDesc;
-      }
-   }
-
-   printDebug("AXICalibrator::detectDevice end", 1);
-
-   return nullptr;
-}
-
 void AXICalibrator::start(AXISetup *setup) {
 
    printDebug("AXICalibrator::start start", 1);
 
-   const char *devDesc;
-
    // reset previous calibration
    setup->clear();
-
-   // detect id code 
-   devDesc = detectDevice();
-   if(devDesc)
-      std::cout << "I: detected device: " << devDesc << std::endl;
-   else {
-      std::cout << "E: no device detected" << std::endl;
-      return;
-   }
 
    std::cout << "I: calibration started" << std::endl;
 
@@ -94,7 +55,7 @@ void AXICalibrator::start(AXISetup *setup) {
 
          uint32_t idcode = dev->probeIdCode();
 
-         if(idcode == refIdCode) {
+         if(idcode == dev->getIdCode()) {
 
             if(minDelay == -1) {
 
@@ -114,7 +75,7 @@ void AXICalibrator::start(AXISetup *setup) {
                validPoints++;
             }
 
-         } else {    // idcode != refIdCode
+         } else {    // idcode != dev->getIdCode()
             
             char msg[128];
             sprintf(msg, "AXICalibrator::startCalibration: idcode FAIL - clkdelay: %d - clkdiv: %d - clkfreq: %d", cdel, cdiv, cfreq);

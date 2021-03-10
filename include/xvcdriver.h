@@ -23,7 +23,16 @@ public:
    uint32_t scanChain(void);
    uint32_t probeIdCode(void);
 
+   uint32_t getIdCode(void) { return idcode; };
+   int getIdCmd(void) { return idcmd; };
+   int getIrLen(void) { return irlen; };
+   std::string getDescription(void) { return desc; }
+
 protected:
+   uint32_t idcode;
+   int idcmd, irlen;
+   std::string desc;
+
    int debugLevel = 0;
    bool verbose = false;
 

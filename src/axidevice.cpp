@@ -6,12 +6,50 @@ AXIDevice::AXIDevice() {
 
    fd = open("/dev/uio0", O_RDWR);
 
-   if (fd < 1) {
-      std::cout << "E: AXIDevice: failed to open UIO device" << std::endl;
-      exit(-1);
-   }
+   if (fd < 1)
+      throw std::runtime_error("E: AXIDevice: failed to open UIO device");
 
    ptr = (volatile jtag_t *) mmap(NULL, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+
+   // try to detect device
+   if(!detect()) 
+      throw std::runtime_error("E: AXIDevice: failed to detect device");
+}
+
+bool AXIDevice::detect(void) {
+
+   printDebug("AXIDevice::detect start", 1);
+
+   DeviceDB devDB(0);
+   uint32_t tempId;
+   const char *tempDesc;
+   bool found = false;
+
+   // read id code at low clock frequency with delay sweep
+   setClockDiv(MAX_CLOCK_DIV);
+
+	for(int cdel=0; cdel<MAX_CLOCK_DELAY; cdel++) {
+
+      setClockDelay(cdel);
+      tempId = scanChain();
+      tempDesc = devDB.idToDescription(tempId);
+
+      if (tempDesc) {
+         found = true;
+         idcode = tempId;
+         irlen = devDB.idToIRLength(idcode);
+         idcmd = devDB.idToIDCmd(idcode);
+         desc = tempDesc;
+
+         if(verbose)
+            printf("AXIDevice::detect device detected: idcode:0x%X irlen:%d idcmd:0x%X desc:%s\n", 
+                  idcode, irlen, idcmd, desc.c_str());
+      }
+   }
+
+   printDebug("AXIDevice::detect end", 1);
+
+   return found;
 }
 
 AXIDevice::~AXIDevice() {

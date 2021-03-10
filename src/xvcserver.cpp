@@ -16,6 +16,7 @@ int main(int argc, const char **argv) {
    bool verbose = false;
    int debugLevel = 0;
    int port = 2542;
+   bool scan = false;
    const char *saveFilename = NULL;
    const char *loadFilename = NULL;
    int cdiv = -1;
@@ -40,6 +41,7 @@ int main(int argc, const char **argv) {
       OPT_INTEGER('p', "port", &port, "set server port (default: 2542)"),
       OPT_GROUP("Driver options"),
       OPT_STRING(0, "driver", &driverName, "set driver name [AXI,FTDI] (default: AXI)", NULL, 0, 0),
+      OPT_BOOLEAN(0, "scan", &scan, "scan for connected device and exit"),
       OPT_GROUP("AXI Calibration options"),
       OPT_STRING('s', "savecalib", &saveFilename, "start calibration and save data to file [AXI driver]", NULL, 0, 0),
       OPT_STRING('l', "loadcalib", &loadFilename, "load calibration data from file [AXI driver]", NULL, 0, 0),
@@ -57,29 +59,41 @@ int main(int argc, const char **argv) {
    argparse_parse(&argparse, argc, argv);
 
    if(std::string(driverName) == "AXI") {
-      dev.reset(new AXIDevice());
+      try {
+         dev.reset(new AXIDevice());
+      } catch (const std::exception& e) {
+         std::cout << e.what() << std::endl;
+         exit(-1);
+      }
    } else if(std::string(driverName) == "FTDI") {
-      dev.reset(new FTDIDevice());
-      std::cout << "E: driver FTDI not supported yet" << std::endl;
-      exit(-1);
+      //try {
+      //   dev.reset(new FTDIDevice());
+      //} catch (const std::exception& e) {
+         std::cout << "E: driver FTDI not supported yet" << std::endl;
+         exit(-1);
+      //}
    } else {
       std::cout << "E: driver " << driverName << " not found" << std::endl;
       exit(-1);
    }
    
-   std::cout << "I: using driver " << driverName << std::endl;
-   IOServer *srv = new IOServer(dev.get());
-
    // apply command line parameters
    dev.get()->setDebugLevel(debugLevel);
    dev.get()->setVerbose(verbose);
    setup->setVerbose(verbose);
-   srv->setVerbose(verbose);
+   
+   std::cout << "I: using driver " << driverName << std::endl;
+   std::cout << "I: device detected: " << dev.get()->getDescription() << 
+      " idcode: 0x" << std::hex << dev.get()->getIdCode() << std::dec <<
+      " irlen: " << dev.get()->getIrLen() <<
+      " idcmd: " << dev.get()->getIdCmd() << std::endl;
+
+   if(scan)
+      exit(0);
 
    if(saveFilename) {
       if(dev.get()->getName() == "AXI") {
          std::cout << "I: start calibration task" << std::endl;
-         // calibration does not start XVC server
          AXICalibrator *calib = new AXICalibrator((AXIDevice *) dev.get());
          calib->setDebugLevel(debugLevel);
          calib->setVerbose(verbose);
@@ -87,6 +101,7 @@ int main(int argc, const char **argv) {
          // save calibration data to file
          setup->saveFile(saveFilename);
          std::cout << "I: calibration data saved in " << saveFilename << std::endl; 
+         // calibration does not start XVC server
          exit(0);
       } else std::cout << "E: calibration not supported by driver " << driverName << std::endl;
    }
@@ -162,11 +177,19 @@ int main(int argc, const char **argv) {
    }
 
 startServer:
+
+   IOServer *srv = new IOServer(dev.get());
+   srv->setVerbose(verbose);
+
    std::cout << "I: using TCP port " << port << std::endl;
    srv->setPort(port);
 
-   std::cout << "I: XVC server started" << std::endl;
-   srv->start();
+   try {
+      std::cout << "I: starting XVC server..." << std::endl;
+      srv->start();
+   } catch (const std::exception& e) {
+      std::cout << e.what() << std::endl;
+   }
 
    return 0;
 }

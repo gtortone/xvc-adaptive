@@ -23,14 +23,12 @@ public:
    void setDebugLevel(int lvl) { debugLevel = lvl; }; 
    void setVerbose(bool v) { verbose = v; };
 
-   const char* detectDevice(void);
    void start(AXISetup *setup);
 
 private:
    AXIDevice *dev;
    int debugLevel = 0;
    bool verbose = false;
-   uint32_t refIdCode;
 
    void printDebug(std::string msg, int lvl);
 };

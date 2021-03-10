@@ -10,8 +10,11 @@ void IOServer::setVectorLength(int v) {
 
    vectorLength = v;
 
-   free(buffer);
-   free(result);
+   if(buffer)
+      free(buffer);
+   
+   if (result)
+      free(result);
 
    buffer = (unsigned char *) malloc(sizeof(char) * vectorLength);
    result = (unsigned char *) malloc(sizeof(char) * vectorLength/2);
@@ -44,10 +47,8 @@ void IOServer::start(void) {
 
    sock = socket(AF_INET, SOCK_STREAM, 0);
 
-   if(sock < 0) {
-      std::cout << "E: IOServer: socket error" << std::endl;
-      exit(1);
-   }
+   if(sock < 0) 
+      throw std::runtime_error("E: IOServer: socket error");
 
    int value = 1;
    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &value, sizeof value);
@@ -56,15 +57,11 @@ void IOServer::start(void) {
    address.sin_port = htons(port);
    address.sin_family = AF_INET;
 
-   if(bind(sock, (struct sockaddr *)&address, sizeof(address)) < 0) {
-      std::cout << "E: IOServer: bind error" << std::endl;
-      exit(1);
-   }
+   if(bind(sock, (struct sockaddr *)&address, sizeof(address)) < 0)
+      throw std::runtime_error("E: IOServer: bind error");
 
-   if(listen(sock, 1) < 0) {
-      std::cout << "E: IOServer: listen error" << std::endl;
-      exit(1);
-   }
+   if(listen(sock, 1) < 0)
+      throw std::runtime_error("E: IOServer: listen error");
 
    FD_ZERO(&conn);
    FD_SET(sock, &conn);
@@ -75,10 +72,8 @@ void IOServer::start(void) {
       fd_set read = conn, except = conn;
       int fd;
 
-      if (select(maxfd + 1, &read, 0, &except, 0) < 0) {
-         std::cout << "E: IOServer: select error" << std::endl;
-         exit(1);
-      }
+      if (select(maxfd + 1, &read, 0, &except, 0) < 0) 
+         throw("E: IOServer: select error");
 
       for (fd = 0; fd <= maxfd; fd++) {
 

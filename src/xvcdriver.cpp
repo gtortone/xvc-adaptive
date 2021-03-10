@@ -36,9 +36,14 @@ uint32_t XVCDriver::probeIdCode(void) {
 	shift(nbits, buffer, result);
 
 	// set IDcode instruction and navigate to EXIT-IR on last bit
-	buffer[0] = 0x20;
-	buffer[1] = 0x09;
-	nbits = 6;
+   uint16_t word = 0;
+   word = (1 << irlen);
+	buffer[0] = word & 0x00FF;
+   buffer[1] = (word & 0xFF00) >> 8;
+   word = idcmd;
+	buffer[2] = word & 0x00FF;
+   buffer[3] = (word & 0xFF00) >> 8;
+	nbits = irlen;
 	shift(nbits, buffer, result);
 	 
 	// UPDATE-IR
@@ -65,6 +70,12 @@ uint32_t XVCDriver::probeIdCode(void) {
    shift(nbits, buffer, result);
 
 	idcode = reinterpret_cast<uint32_t *>(result);
+   
+	// TEST-LOGIC-RESET
+  	buffer[0] = 0xFF;
+   buffer[1] = 0x00;
+   nbits = 5;
+   shift(nbits, buffer, result);
 
    printDebug("XVCDriver::probeIdCode end", 1);
 
