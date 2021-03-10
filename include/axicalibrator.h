@@ -5,7 +5,6 @@
 
 #include "axidevice.h"
 #include "axisetup.h"
-#include "devicedb.h"
 
 /*
    AXICalibrator is a class to calibrate an AXI device using clock divisor
