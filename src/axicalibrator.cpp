@@ -27,7 +27,7 @@ void AXICalibrator::start(AXISetup *setup) {
    int minDelay, maxDelay;
    int currIter = 0;
    int interval = 5;
-   int hyst = 0;
+   int h = 0;
    bool record = false;
 
    for(cdiv=MAX_CLOCK_DIV; cdiv>=0; cdiv--) {
@@ -45,7 +45,7 @@ void AXICalibrator::start(AXISetup *setup) {
       validPoints = 0;
       record = false;
       cfreq = 100000000 / ((cdiv + 1) * 2);
-      hyst = 0;
+      h = 0;
 
       for(cdel=cdiv/2; cdel<MAX_CLOCK_DELAY; cdel++) {
 
@@ -57,13 +57,14 @@ void AXICalibrator::start(AXISetup *setup) {
 
             if(minDelay == -1) {
 
-               if(++hyst >= HYSTERESIS) {
+               if(++h >= hyst) {
                   if(debugLevel) {
                      char msg[128];
                      sprintf(msg, "AXICalibrator::startCalibration: idcode OK - clkdelay: %d - clkdiv: %d - clkfreq: %d", cdel, cdiv, cfreq);
                      printDebug(msg, 2);
                   }
-                  minDelay = cdel;
+                  validPoints = hyst;  //
+                  minDelay = cdel-hyst;
                   record = true;
                }
             }
@@ -75,7 +76,7 @@ void AXICalibrator::start(AXISetup *setup) {
 
          } else {    // idcode != dev->getIdCode()
 
-            hyst = 0;
+            h = 0;
             
             char msg[128];
             sprintf(msg, "AXICalibrator::startCalibration: idcode FAIL - clkdelay: %d - clkdiv: %d - clkfreq: %d", cdel, cdiv, cfreq);

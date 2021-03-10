@@ -11,8 +11,6 @@
    and clock delay probing device for a valid idcode
 */
 
-#define  HYSTERESIS    0
-
 class AXICalibrator {
 
 public:
@@ -22,12 +20,14 @@ public:
    void setDebugLevel(int lvl) { debugLevel = lvl; }; 
    void setVerbose(bool v) { verbose = v; };
 
+   void setHysteresis(int v) { hyst = v; };
    void start(AXISetup *setup);
 
 private:
    AXIDevice *dev;
    int debugLevel = 0;
    bool verbose = false;
+   int hyst = 0;
 
    void printDebug(std::string msg, int lvl);
 };

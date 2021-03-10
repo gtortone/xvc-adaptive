@@ -17,6 +17,7 @@ int main(int argc, const char **argv) {
    int debugLevel = 0;
    int port = 2542;
    bool scan = false;
+   int hyst = 0;
    const char *saveFilename = NULL;
    const char *loadFilename = NULL;
    int cdiv = -1;
@@ -37,16 +38,16 @@ int main(int argc, const char **argv) {
       OPT_GROUP("Basic options"),
       OPT_BOOLEAN('v', "verbose", &verbose, "enable verbose"),
       OPT_INTEGER('d', "debug", &debugLevel, "set debug level (default: 0)"),
-      OPT_GROUP("Network options"),
-      OPT_INTEGER('p', "port", &port, "set server port (default: 2542)"),
-      OPT_GROUP("Driver options"),
       OPT_STRING(0, "driver", &driverName, "set driver name [AXI,FTDI] (default: AXI)", NULL, 0, 0),
       OPT_BOOLEAN(0, "scan", &scan, "scan for connected device and exit"),
+      OPT_GROUP("Network options"),
+      OPT_INTEGER('p', "port", &port, "set server port (default: 2542)"),
       OPT_GROUP("AXI Calibration options"),
-      OPT_STRING('s', "savecalib", &saveFilename, "start calibration and save data to file [AXI driver]", NULL, 0, 0),
-      OPT_STRING('l', "loadcalib", &loadFilename, "load calibration data from file [AXI driver]", NULL, 0, 0),
-      OPT_INTEGER(0, "id", &id, "load calibration entry from file by id [AXI driver]"),
-      OPT_INTEGER(0, "freq", &freq, "load calibration entry from file by clock frequency [AXI driver]"),
+      OPT_STRING('s', "savecalib", &saveFilename, "start calibration and save data to file", NULL, 0, 0),
+      OPT_STRING('l', "loadcalib", &loadFilename, "load calibration data from file", NULL, 0, 0),
+      OPT_INTEGER(0, "hyst", &hyst, "set hysteresis value (default: 0)"),
+      OPT_INTEGER(0, "id", &id, "load calibration entry from file by id"),
+      OPT_INTEGER(0, "freq", &freq, "load calibration entry from file by clock frequency"),
       OPT_GROUP("AXI Setup options"),
       OPT_INTEGER(0, "cdiv", &cdiv, "set clock divisor (0:1023) [AXI driver]", NULL, 0, 0),
       OPT_INTEGER(0, "cdel", &cdel, "set clock delay (0:255) [AXI driver]", NULL, 0, 0),
@@ -97,6 +98,10 @@ int main(int argc, const char **argv) {
          AXICalibrator *calib = new AXICalibrator((AXIDevice *) dev.get());
          calib->setDebugLevel(debugLevel);
          calib->setVerbose(verbose);
+         if(hyst) {
+            calib->setHysteresis(hyst);
+            std::cout << "I: apply hysteresis value " << hyst << std::endl;
+         }
          calib->start(setup);
          // save calibration data to file
          setup->saveFile(saveFilename);
