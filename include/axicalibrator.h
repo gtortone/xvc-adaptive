@@ -11,7 +11,7 @@
    and clock delay probing device for a valid idcode
 */
 
-#define  HYSTERESIS    5
+#define  HYSTERESIS    0
 
 class AXICalibrator {
 

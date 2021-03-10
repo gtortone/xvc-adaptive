@@ -86,7 +86,7 @@ int main(int argc, const char **argv) {
    std::cout << "I: device detected: " << dev.get()->getDescription() << 
       " idcode: 0x" << std::hex << dev.get()->getIdCode() << std::dec <<
       " irlen: " << dev.get()->getIrLen() <<
-      " idcmd: " << dev.get()->getIdCmd() << std::endl;
+      " idcmd: 0x" << std::hex << dev.get()->getIdCmd() << std::dec << std::endl;
 
    if(scan)
       exit(0);

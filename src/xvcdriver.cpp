@@ -36,14 +36,12 @@ uint32_t XVCDriver::probeIdCode(void) {
    shift(nbits, buffer, result);
 
    // set IDcode instruction and navigate to EXIT-IR on last bit
-   if(irlen <= 8) {
-      buffer[0] = 1 << (irlen-1);
-      buffer[1] = idcmd;
-   } else {
-      buffer[0] = 0x00;
-      buffer[1] = 1 << (irlen-9);
-      buffer[2] = idcmd;
-      buffer[3] = 0x00;
+   uint32_t tms = 1 << (irlen-1);
+   uint32_t tdi = idcmd;
+   int nbytes = (irlen + 7) / 8;
+   for(int i=0; i<nbytes; i++) {
+      buffer[i] = (tms >> 8*i) & 0x000000FF;
+      buffer[i+nbytes] = (tdi >> 8*i) & 0x000000FF;
    }
    nbits = irlen;
    shift(nbits, buffer, result);

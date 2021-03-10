@@ -45,9 +45,9 @@ void AXICalibrator::start(AXISetup *setup) {
       validPoints = 0;
       record = false;
       cfreq = 100000000 / ((cdiv + 1) * 2);
-      hyst = 0 ;
+      hyst = 0;
 
-      for(cdel=0; cdel<MAX_CLOCK_DELAY; cdel++) {
+      for(cdel=cdiv/2; cdel<MAX_CLOCK_DELAY; cdel++) {
 
          dev->setClockDelay(cdel);
 
@@ -74,6 +74,8 @@ void AXICalibrator::start(AXISetup *setup) {
             }
 
          } else {    // idcode != dev->getIdCode()
+
+            hyst = 0;
             
             char msg[128];
             sprintf(msg, "AXICalibrator::startCalibration: idcode FAIL - clkdelay: %d - clkdiv: %d - clkfreq: %d", cdel, cdiv, cfreq);
