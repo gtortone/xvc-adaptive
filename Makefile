@@ -23,6 +23,11 @@ CPPFLAGS += -O3 -Wall -Wno-unused-result
 LDFLAGS += $(INCLUDE_LIB)
 LDLIBS += 
 
+# use DEBUG=1 to include debugging
+ifdef DEBUG
+  CPPFLAGS += -g	
+endif
+
 # Set other tools
 MKDIR = mkdir -p
 
