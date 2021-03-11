@@ -50,7 +50,7 @@ int main(int argc, const char **argv) {
       OPT_INTEGER(0, "freq", &freq, "load calibration entry from file by clock frequency"),
       OPT_GROUP("AXI Setup options"),
       OPT_INTEGER(0, "cdiv", &cdiv, "set clock divisor (0:1023) [AXI driver]", NULL, 0, 0),
-      OPT_INTEGER(0, "cdel", &cdel, "set clock delay (0:255) [AXI driver]", NULL, 0, 0),
+      OPT_INTEGER(0, "cdel", &cdel, "set capture delay (0:255) [AXI driver]", NULL, 0, 0),
       OPT_END(),
    };
 
