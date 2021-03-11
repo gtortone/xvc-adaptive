@@ -30,6 +30,12 @@ AXI Setup options
     --cdel=<int>              set clock delay (0:255) [AXI driver]
 ```
 
+## Build
+FTDI code depends from libusb and libftdi
+```
+apt-get install libusb-1.0-0 libusb-1.0-0-dev libftdi1 libftdi-dev
+```
+
 ## AXI driver
 AXI driver is based on Xilinx XAPP1251 that use an open IP core (AXI-JTAG). This IP core is modified in order to support configurable TCK frequency and delay to compensate TDO propagation on long cables.
 
