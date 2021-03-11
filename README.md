@@ -12,22 +12,39 @@ Xilinx Virtual Cable (XVC) adaptive server
 Basic options
     -v, --verbose             enable verbose
     -d, --debug=<int>         set debug level (default: 0)
+    --driver=<str>            set driver name [AXI,FTDI] (default: AXI)
+    --scan                    scan for connected device and exit
 
 Network options
     -p, --port=<int>          set server port (default: 2542)
 
-Driver options
-    --driver=<str>            set driver name [AXI,FTDI] (default: AXI)
+Calibration options
+    -s, --savecalib=<str>     start calibration and save data to file
+    -l, --loadcalib=<str>     load calibration data from file
+    --id=<int>                load calibration entry from file by id
+    --freq=<int>              load calibration entry from file by clock frequency
 
 AXI Calibration options
-    -s, --savecalib=<str>     start calibration and save data to file [AXI driver]
-    -l, --loadcalib=<str>     load calibration data from file [AXI driver]
-    --id=<int>                load calibration entry from file by id [AXI driver]
-    --freq=<int>              load calibration entry from file by clock frequency [AXI driver]
+    --hyst=<int>              set hysteresis value (default: 0)
 
-AXI Setup options
+AXI Quick Setup options
     --cdiv=<int>              set clock divisor (0:1023) [AXI driver]
-    --cdel=<int>              set clock delay (0:255) [AXI driver]
+    --cdel=<int>              set capture delay (0:255) [AXI driver]
+
+FTDI options
+    --vid=<int>               set FTDI device Vendor ID (default: 0x0403)
+    --pid=<int>               set FTDI device Product ID (default: 0x6010)
+    --interface=<int>         set FTDI device JTAG interface (default: 1)
+
+FTDI Calibration options
+    --minfreq=<int>           set min clock frequency for calibration (default: 1000 - 1 kHz)
+    --maxfreq=<int>           set max clock frequency for calibration (default: 30000000 - 30 MHz)
+    --loop=<int>              set number of loop to use for calibration (default: 10)
+
+FTDI Quick Setup options
+    --cfreq=<int>             set FTDI clock frequency
+    --cedge=<int>             set FTDI TDO sampling edge (0: negative, 1:positive - default: 0)
+
 ```
 
 ## Build
