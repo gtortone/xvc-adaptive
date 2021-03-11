@@ -13,7 +13,7 @@ AXIDevice::AXIDevice() {
 
    // try to detect device
    if(!detect()) 
-      throw std::runtime_error("E: AXIDevice: failed to detect device");
+      printf("WARNING: AXIDevice: failed to detect device (idcode: 0x%08X)\n", idcode);
 }
 
 bool AXIDevice::detect(void) {
@@ -77,19 +77,20 @@ void AXIDevice::shift(int nbits, unsigned char *buffer, unsigned char *result) {
    int bytesLeft = nbytes;
    int bitsLeft = nbits;
    int byteIndex = 0;
-   int *tdi, *tms, tdo; 
-   int tmsVal, tdiVal;
-   int last_tdi, last_tms, last_length;
+   unsigned int *tdi, *tms, tdo; 
+   unsigned int tmsVal, tdiVal;
+   unsigned int last_tdi, last_tms, last_length;
 
    last_tms = ptr->tms_offset = 0;
    last_tdi = ptr->tdi_offset = 0;
    last_length = ptr->length_offset = 0;
 
+
    while (bytesLeft > 0) {
 
       int len = 0;
 
-      if (bytesLeft >= 4) {
+      if (bitsLeft >= 32) {
 
          len = 4;
          if (32 != last_length)
@@ -98,20 +99,22 @@ void AXIDevice::shift(int nbits, unsigned char *buffer, unsigned char *result) {
             last_length = 32;
          }
 
-         tms = reinterpret_cast<int*>(&buffer[byteIndex]);
-         tdi = reinterpret_cast<int*>(&buffer[byteIndex + nbytes]);
+         tms = reinterpret_cast<unsigned int*>(&buffer[byteIndex]);
+         tdi = reinterpret_cast<unsigned int*>(&buffer[byteIndex + nbytes]);
 
       } else {
 
          len = bytesLeft;
          ptr->length_offset = bitsLeft;
-
+         last_length = bitsLeft;
+   
          tmsVal = tdiVal = 0;
          memcpy(&tmsVal, &buffer[byteIndex], bytesLeft);
          memcpy(&tdiVal, &buffer[byteIndex + nbytes], bytesLeft);
 
          tms = &tmsVal;
          tdi = &tdiVal;
+
       }
 
       if (*tms != last_tms)
@@ -131,11 +134,17 @@ void AXIDevice::shift(int nbits, unsigned char *buffer, unsigned char *result) {
       while (ptr->ctrl_offset) { }
 
       tdo = ptr->tdo_offset;
+      
+      // aligns captured TDO vector to lsb, compensates lack of hardware shifts  
+      if (bitsLeft < 32) {
+        tdo = tdo >> (32 - bitsLeft);
+      }
+
       memcpy(&result[byteIndex], &tdo, len);
 
       if(debugLevel) {
          char msg[128];
-         sprintf(msg, "LEN:%d bits:%d TMS:0x%08x TDI:0x%08x TDO:0x%08x", len, (len==4)?32:bitsLeft, *tms, *tdi, tdo);
+         sprintf(msg, "Bytes:%d Bits:%d TMS:0x%08x TDI:0x%08x TDO:0x%08x", len, (bitsLeft>32)?32:bitsLeft, *tms, *tdi, tdo);
          printDebug(msg, 3);
       }
 

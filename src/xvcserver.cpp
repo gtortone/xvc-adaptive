@@ -58,7 +58,7 @@ int main(int argc, const char **argv) {
       OPT_INTEGER(0, "hyst", &hyst, "set hysteresis value (default: 0)"),
       OPT_GROUP("AXI Quick Setup options"),
       OPT_INTEGER(0, "cdiv", &cdiv, "set clock divisor (0:1023) [AXI driver]", NULL, 0, 0),
-      OPT_INTEGER(0, "cdel", &cdel, "set clock delay (0:255) [AXI driver]", NULL, 0, 0),
+      OPT_INTEGER(0, "cdel", &cdel, "set capture delay (0:255) [AXI driver]", NULL, 0, 0),
       OPT_GROUP("FTDI options"),
       OPT_INTEGER(0, "vid", &vid, "set FTDI device Vendor ID (default: 0x0403)", NULL, 0, 0),
       OPT_INTEGER(0, "pid", &pid, "set FTDI device Product ID (default: 0x6010)", NULL, 0, 0),
