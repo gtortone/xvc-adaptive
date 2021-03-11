@@ -34,7 +34,8 @@ void AXICalibrator::start(AXISetup *setup) {
 
       currIter = float(MAX_CLOCK_DIV - cdiv) / MAX_CLOCK_DIV * 100;
       if(currIter >= interval) {
-         std::cout << interval << "%..." << std::flush;
+         printf("\r %d%%", interval);
+         fflush(stdout);
          interval += 5;
       }
 

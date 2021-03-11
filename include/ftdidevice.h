@@ -29,6 +29,9 @@
 #define MAX_CFREQ_DIV5_OFF 30000000
 #define MIN_CFREQ_DIV5_OFF 457.76
 
+#define DIV5_ON      true
+#define DIV5_OFF     false
+
 class FTDIDevice : public XVCDriver {
 
 typedef struct {
@@ -41,8 +44,12 @@ public:
    ~FTDIDevice();
 
    bool detect(void);
+   int getDivisorByFrequency(bool div5, int freq);
+   int getFrequencyByDivisor(bool div5, int div);
+
    void setClockDiv(bool div5, int value);
    void setClockFrequency(int freq);
+
    void readBytes(unsigned int len, unsigned char *buf);
    void shift(int nbits, unsigned char *buffer, unsigned char *result);
 

@@ -30,7 +30,6 @@ FTDIDevice::FTDIDevice(int vid, int pid, enum ftdi_interface interface) {
 
    if ((res = ftdi_write_data(&ftdi, buf, sizeof(buf))) != sizeof(buf)) {
       std::string errmsg(ftdi_get_error_string(&ftdi));
-      std::cout << res << std::endl;
       throw std::runtime_error("E: FTDIDevice error initializing MPSSE (" + errmsg + ")");
    }
 
@@ -43,6 +42,20 @@ FTDIDevice::~FTDIDevice() {
    ftdi_usb_reset(&ftdi);
    ftdi_usb_close(&ftdi);
    ftdi_deinit(&ftdi);
+}
+
+int FTDIDevice::getDivisorByFrequency(bool div5, int freq) {
+   if(div5)
+      return (12000000/(2 * freq)) - 1;
+   else
+      return (60000000/(2 * freq)) - 1;
+}
+
+int FTDIDevice::getFrequencyByDivisor(bool div5, int div) {
+   if(div5)
+      return 12000000/((1+div)*2);
+   else
+      return 60000000/((1+div)*2);
 }
 
 void FTDIDevice::setClockDiv(bool div5, int value) {
@@ -69,13 +82,13 @@ void FTDIDevice::setClockFrequency(int freq) {
    int value;
 
    if (freq <= MAX_CFREQ_DIV5_ON && freq >= MIN_CFREQ_DIV5_ON)
-      valDiv5On = (12000000/(2 * freq)) - 1;
+      valDiv5On = getDivisorByFrequency(true, freq);
       
    if (freq <= MAX_CFREQ_DIV5_OFF && freq >= MIN_CFREQ_DIV5_OFF)
-      valDiv5Off = (60000000/(2 * freq)) - 1;
+      valDiv5Off = getDivisorByFrequency(false, freq);
 
-   freqDiv5On  = 12000000/((1+valDiv5On)*2);
-   freqDiv5Off = 60000000/((1+valDiv5Off)*2);
+   freqDiv5On  = getFrequencyByDivisor(true, valDiv5On);
+   freqDiv5Off = getFrequencyByDivisor(false, valDiv5Off);
 
    if(abs(freq-freqDiv5On) <= abs(freq-freqDiv5Off)) {
       divisorBy5 = true;
@@ -102,7 +115,7 @@ bool FTDIDevice::detect(void) {
    bool found = false;
 
    // read id code at _very_ low clock frequency (91,553 Hz)
-   setClockDiv(true, 0xFFFF);
+   setClockDiv(DIV5_ON, 0xFFFF);
 
    tempId = scanChain();
    tempDesc = devDB.idToDescription(tempId);
