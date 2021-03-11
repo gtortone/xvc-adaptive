@@ -42,13 +42,14 @@ int main(int argc, const char **argv) {
       OPT_BOOLEAN(0, "scan", &scan, "scan for connected device and exit"),
       OPT_GROUP("Network options"),
       OPT_INTEGER('p', "port", &port, "set server port (default: 2542)"),
-      OPT_GROUP("AXI Calibration options"),
+      OPT_GROUP("Calibration options"),
       OPT_STRING('s', "savecalib", &saveFilename, "start calibration and save data to file", NULL, 0, 0),
       OPT_STRING('l', "loadcalib", &loadFilename, "load calibration data from file", NULL, 0, 0),
-      OPT_INTEGER(0, "hyst", &hyst, "set hysteresis value (default: 0)"),
       OPT_INTEGER(0, "id", &id, "load calibration entry from file by id"),
       OPT_INTEGER(0, "freq", &freq, "load calibration entry from file by clock frequency"),
-      OPT_GROUP("AXI Setup options"),
+      OPT_GROUP("AXI Calibration options"),
+      OPT_INTEGER(0, "hyst", &hyst, "set hysteresis value (default: 0)"),
+      OPT_GROUP("AXI Quick Setup options"),
       OPT_INTEGER(0, "cdiv", &cdiv, "set clock divisor (0:1023) [AXI driver]", NULL, 0, 0),
       OPT_INTEGER(0, "cdel", &cdel, "set clock delay (0:255) [AXI driver]", NULL, 0, 0),
       OPT_END(),
@@ -67,17 +68,24 @@ int main(int argc, const char **argv) {
          exit(-1);
       }
    } else if(std::string(driverName) == "FTDI") {
-      //try {
-      //   dev.reset(new FTDIDevice());
-      //} catch (const std::exception& e) {
-         std::cout << "E: driver FTDI not supported yet" << std::endl;
+      try {
+         dev.reset(new FTDIDevice());
+      } catch (const std::exception& e) {
+         std::cout << e.what() << std::endl;
          exit(-1);
-      //}
+      }
+      /* test
+      dev.get()->setDebugLevel(debugLevel);
+      dev.get()->setVerbose(verbose);
+      FTDIDevice *fdev = (FTDIDevice *) dev.get();
+      for(int i=0; i<30000000; i=i+1000)
+         fdev->setClockFrequency(i); 
+      */
    } else {
       std::cout << "E: driver " << driverName << " not found" << std::endl;
       exit(-1);
    }
-   
+
    // apply command line parameters
    dev.get()->setDebugLevel(debugLevel);
    dev.get()->setVerbose(verbose);
