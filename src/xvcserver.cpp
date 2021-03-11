@@ -34,6 +34,8 @@ int main(int argc, const char **argv) {
    int cfreq = -1;
    int minfreq = 100000;      // 100 kHz
    int maxfreq = 30000000;    // 30 MHz
+   int cedge = -1;
+   int loop = 10;
 
    static const char *const usage[] = {
       "xvcserver [options]",
@@ -66,8 +68,10 @@ int main(int argc, const char **argv) {
       OPT_GROUP("FTDI Calibration options"),
       OPT_INTEGER(0, "minfreq", &minfreq, "set min clock frequency for calibration (default: 100000 - 100 kHz)", NULL, 0, 0),
       OPT_INTEGER(0, "maxfreq", &maxfreq, "set max clock frequency for calibration (default: 30000000 - 30 MHz)", NULL, 0, 0),
+      OPT_INTEGER(0, "loop", &loop, "set number of loop to use for calibration (default: 10)", NULL, 0, 0),
       OPT_GROUP("FTDI Quick Setup options"),
       OPT_INTEGER(0, "cfreq", &cfreq, "set FTDI clock frequency", NULL, 0, 0),
+      OPT_INTEGER(0, "cedge", &cedge, "set FTDI TDO sampling edge (0: negative, 1:positive - default: 0)", NULL, 0, 0),
       OPT_END(),
    };
 
@@ -137,7 +141,11 @@ int main(int argc, const char **argv) {
             std::cout << "E: calibration min clock frequency is greater then max clock frequency" << std::endl;
             exit(-1);
          }
-         calib->start(setup, minfreq, maxfreq);
+         if(loop < 0) {
+            std::cout << "E: calibration loop must be positive number" << std::endl;
+            exit(-1);
+         }
+         calib->start(setup, minfreq, maxfreq, loop);
          // save calibration data to file
          setup->saveFile(saveFilename);
          std::cout << "I: calibration data saved in " << saveFilename << std::endl;
@@ -171,6 +179,15 @@ int main(int argc, const char **argv) {
          FTDIDevice *fdev = (FTDIDevice *) dev.get();
          fdev->setClockFrequency(cfreq);
       } else std::cout << "E: clock frequency parameter not supported by driver " << driverName << std::endl;
+   }
+
+   if(cedge != -1) {
+      if(dev.get()->getName() == "FTDI") {
+         quickSetup = true;
+         std::cout << "I: apply sampling edge " << cedge << std::endl;
+         FTDIDevice *fdev = (FTDIDevice *) dev.get();
+         fdev->setTDOSampling(cedge);
+      } else std::cout << "E: TDO sampling parameter not supported by driver " << driverName << std::endl;
    }
 
    if(quickSetup) {

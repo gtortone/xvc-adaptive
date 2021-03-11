@@ -32,6 +32,9 @@
 #define DIV5_ON      true
 #define DIV5_OFF     false
 
+#define POS_EDGE     0x00
+#define NEG_EDGE     MPSSE_READ_NEG    // 0x04
+
 class FTDIDevice : public XVCDriver {
 
 typedef struct {
@@ -49,12 +52,14 @@ public:
 
    void setClockDiv(bool div5, int value);
    void setClockFrequency(int freq);
+   void setTDOSampling(int edge);
 
    void readBytes(unsigned int len, unsigned char *buf);
    void shift(int nbits, unsigned char *buffer, unsigned char *result);
 
 private:
    struct ftdi_context ftdi;
+   int samplingEdge = POS_EDGE;
 };
 
 #endif

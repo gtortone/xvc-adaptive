@@ -20,7 +20,7 @@ public:
    void setDebugLevel(int lvl) { debugLevel = lvl; }; 
    void setVerbose(bool v) { verbose = v; };
 
-   void start(FTDISetup *setup, int minFreq, int maxFreq);
+   void start(FTDISetup *setup, int minFreq, int maxFreq, int loop);
 
 private:
    FTDIDevice *dev;

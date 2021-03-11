@@ -9,7 +9,7 @@ void FTDICalibrator::printDebug(std::string msg, int lvl) {
       std::cout << msg << std::endl;
 }
 
-void FTDICalibrator::start(FTDISetup *setup, int minFreq, int maxFreq) {
+void FTDICalibrator::start(FTDISetup *setup, int minFreq, int maxFreq, int loop) {
 
    printDebug("FTDICalibrator::start start", 1);
 
@@ -39,9 +39,16 @@ void FTDICalibrator::start(FTDISetup *setup, int minFreq, int maxFreq) {
       dev->setClockDiv(false, cdiv);
       cfreq = dev->getFrequencyByDivisor(DIV5_OFF, cdiv);
 
-      uint32_t idcode = dev->probeIdCode();
+      int match = 0;
+      for(int i=0; i<loop; i++) {
+         uint32_t idcode = dev->probeIdCode();
+         if(idcode == dev->getIdCode())
+            match++;
+         else
+            break;
+      }
 
-      if(idcode == dev->getIdCode()) {
+      if(match == loop) {
 
          FTDICalibItem item;
          item.id = ++id;

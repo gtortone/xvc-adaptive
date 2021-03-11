@@ -33,6 +33,9 @@ FTDIDevice::FTDIDevice(int vid, int pid, enum ftdi_interface interface) {
       throw std::runtime_error("E: FTDIDevice error initializing MPSSE (" + errmsg + ")");
    }
 
+   // set TDO sampling on clock negative edge
+   setTDOSampling(NEG_EDGE);
+
    // try to detect device
    if(!detect())
       throw std::runtime_error("E: FTDIDevice: failed to detect device");
@@ -103,6 +106,14 @@ void FTDIDevice::setClockFrequency(int freq) {
    if(verbose)
       std::cout << "FTDIDevice::setClockFrequency divisorby5: " << divisorBy5 << 
          " value: " << value << " frequency req: " << freq << std::endl;
+}
+
+void FTDIDevice::setTDOSampling(int edge) {
+   if(edge == POS_EDGE)
+      samplingEdge = POS_EDGE;
+   else if(edge == NEG_EDGE)
+      samplingEdge = NEG_EDGE;
+   else std::cout << "E: FTDIDevice::setSampling edge not valid" << std::endl;
 }
 
 bool FTDIDevice::detect(void) {
@@ -195,7 +206,7 @@ void FTDIDevice::shift(int nbits, unsigned char *buffer, unsigned char *result) 
             if (in_cmd_building == 0) {
 
                in_cmd_building = 1;
-               ftdi_cmd[wr_ptr++] = MPSSE_DO_WRITE | MPSSE_DO_READ | MPSSE_LSB | MPSSE_WRITE_NEG | MPSSE_READ_NEG;
+               ftdi_cmd[wr_ptr++] = MPSSE_DO_WRITE | MPSSE_DO_READ | MPSSE_LSB | MPSSE_WRITE_NEG | samplingEdge;
                // 0x10 + 0x20 + 0x08 + 0x01        = 0x39       without MPSSE_READ_NEG
                // 0x10 + 0x20 + 0x08 + 0x01 + 0x04 = 0x3D       with MPSSE_READ_NEG
 
@@ -226,7 +237,7 @@ void FTDIDevice::shift(int nbits, unsigned char *buffer, unsigned char *result) 
 
             if ((buffer[cur_byte_pos] == 0) && (left <= 7)) { // no TMS, bit shift of last bits
 
-               ftdi_cmd[wr_ptr++] = MPSSE_DO_WRITE | MPSSE_DO_READ | MPSSE_LSB | MPSSE_BITMODE | MPSSE_WRITE_NEG | MPSSE_READ_NEG;
+               ftdi_cmd[wr_ptr++] = MPSSE_DO_WRITE | MPSSE_DO_READ | MPSSE_LSB | MPSSE_BITMODE | MPSSE_WRITE_NEG | samplingEdge;
                // 0x10 + 0x20 + 0x08 + 0x02 + 0x01           = 0x3B       without MPSSE_READ_NEG
                // 0x10 + 0x20 + 0x08 + 0x01 + 0x02 + 0x04    = 0x3F       with MPSSE_READ_NEG
                ftdi_cmd[wr_ptr++] = left - 1;
@@ -246,7 +257,7 @@ void FTDIDevice::shift(int nbits, unsigned char *buffer, unsigned char *result) 
                   if (left == 0)
                      break; // this could be the last byte!
 
-                  ftdi_cmd[wr_ptr++] = MPSSE_WRITE_TMS | MPSSE_DO_READ | MPSSE_LSB | MPSSE_BITMODE | MPSSE_WRITE_NEG | MPSSE_READ_NEG;
+                  ftdi_cmd[wr_ptr++] = MPSSE_WRITE_TMS | MPSSE_DO_READ | MPSSE_LSB | MPSSE_BITMODE | MPSSE_WRITE_NEG | samplingEdge;
                   // 0x40 + 0x20 + 0x08 + 0x02 + 0x01         = 0x6B
                   // 0x40 + 0x20 + 0x08 + 0x02 + 0x01 + 0x04  = 0x6F
                   ftdi_cmd[wr_ptr++] = 0; // one bit length
@@ -282,8 +293,6 @@ void FTDIDevice::shift(int nbits, unsigned char *buffer, unsigned char *result) 
 
    // send the created command list
    ftdi_write_data(&ftdi, ftdi_cmd, wr_ptr);
-   //if (ftdi_write_data(&ftdi, ftdi_cmd, wr_ptr) != wr_ptr)
-   //return 1;
 
    // read the response
    readBytes(rd_len, ftdi_res);
