@@ -273,68 +273,68 @@ void FTDIDevice::shift(int nbits, unsigned char *buffer, unsigned char *result) 
                } // end for
 
                cur_byte_pos++;
-         }
+            }
 
-      } // else
+         } // else
 
-   }   // end while commands
+      }   // end while commands
 
-   // we must complete the last command if it has not been completed yet
-   // the code below should be the same, as in the loop!
-   if (in_cmd_building) { // complete the last command
+      // we must complete the last command if it has not been completed yet
+      // the code below should be the same, as in the loop!
+      if (in_cmd_building) { // complete the last command
 
-      ftdi_cmd[last_len] = cur_len & 0xff;
-      ftdi_cmd[last_len + 1] = (cur_len >> 8) & 0xff;
-      in_cmd_building = 0;
-      // add the descriptor to the read descriptors
-      ftdi_desc[desc_pos].oper = 0;         // byte shift
-      ftdi_desc[desc_pos++].len = cur_len;
-   }
+         ftdi_cmd[last_len] = cur_len & 0xff;
+         ftdi_cmd[last_len + 1] = (cur_len >> 8) & 0xff;
+         in_cmd_building = 0;
+         // add the descriptor to the read descriptors
+         ftdi_desc[desc_pos].oper = 0;         // byte shift
+         ftdi_desc[desc_pos++].len = cur_len;
+      }
 
-   // send the created command list
-   ftdi_write_data(&ftdi, ftdi_cmd, wr_ptr);
+      // send the created command list
+      ftdi_write_data(&ftdi, ftdi_cmd, wr_ptr);
 
-   // read the response
-   readBytes(rd_len, ftdi_res);
+      // read the response
+      readBytes(rd_len, ftdi_res);
 
-   // unpack the response basing on the read descriptors
-   // please note, that the responses do not always come as full bits!
-   int rd_byte_pos = 0;
+      // unpack the response basing on the read descriptors
+      // please note, that the responses do not always come as full bits!
+      int rd_byte_pos = 0;
 
-   for (i = 0; i < desc_pos; i++) {
+      for (i = 0; i < desc_pos; i++) {
 
-      int j;
+         int j;
 
-      // reading depends on the type of command
-      switch (ftdi_desc[i].oper) {
+         // reading depends on the type of command
+         switch (ftdi_desc[i].oper) {
 
-         case 0: // standard shift
-            for (j = 0; j <= ftdi_desc[i].len; j++) {
-               int bnr;
-               for (bnr = 0; bnr < 8; bnr++) {
+            case 0: // standard shift
+               for (j = 0; j <= ftdi_desc[i].len; j++) {
+                  int bnr;
+                  for (bnr = 0; bnr < 8; bnr++) {
+                     result[bit_pos / 8] |= (ftdi_res[rd_byte_pos] & (1 << bnr)) ? (1 << (bit_pos & 7)) : 0;
+                     bit_pos++;
+                  }
+                  rd_byte_pos++;
+               }
+            break;
+            case 1: // bit shift
+               int bnr; // received bits are shifted from the MSB!
+               for (bnr = 7 - ftdi_desc[i].len; bnr < 8; bnr++) {
                   result[bit_pos / 8] |= (ftdi_res[rd_byte_pos] & (1 << bnr)) ? (1 << (bit_pos & 7)) : 0;
                   bit_pos++;
                }
                rd_byte_pos++;
-            }
-         break;
-         case 1: // bit shift
-            int bnr; //Please note, that the received bits are shifted from the MSB!
-            for (bnr = 7 - ftdi_desc[i].len; bnr < 8; bnr++) {
-               result[bit_pos / 8] |= (ftdi_res[rd_byte_pos] & (1 << bnr)) ? (1 << (bit_pos & 7)) : 0;
+            break;
+            case 2: // TMS shift
+               result[bit_pos / 8] |= (ftdi_res[rd_byte_pos] & 0x80) ? (1 << (bit_pos & 7)) : 0;
                bit_pos++;
-            }
-            rd_byte_pos++;
-         break;
-         case 2: // TMS shift
-            result[bit_pos / 8] |= (ftdi_res[rd_byte_pos] & 0x80) ? (1 << (bit_pos & 7)) : 0;
-            bit_pos++;
-            rd_byte_pos++;
+               rd_byte_pos++;
             break;
 
-      } // end switch
+         } // end switch
 
-   } // end for
-   
-  } // end while
+      } // end for
+
+   } // end while
 } 
