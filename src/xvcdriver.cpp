@@ -1,6 +1,7 @@
 #include "xvcdriver.h"
 
 XVCDriver::XVCDriver(void) {
+   std::cout << "XVCDriver::XVCDriver" << std::endl;
 }
 
 void XVCDriver::printDebug(std::string msg, int lvl) {

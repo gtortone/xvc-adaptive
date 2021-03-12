@@ -82,14 +82,14 @@ int main(int argc, const char **argv) {
 
    if(std::string(driverName) == "AXI") {
       try {
-         dev.reset(new AXIDevice());
+         dev.reset(new AXIDevice(verbose, debugLevel));
       } catch (const std::exception& e) {
          std::cout << e.what() << std::endl;
          exit(-1);
       }
    } else if(std::string(driverName) == "FTDI") {
       try {
-         dev.reset(new FTDIDevice(vid, pid, interface));
+         dev.reset(new FTDIDevice(vid, pid, interface, verbose, debugLevel));
       } catch (const std::exception& e) {
          std::cout << e.what() << std::endl;
          exit(-1);
@@ -99,10 +99,6 @@ int main(int argc, const char **argv) {
       exit(-1);
    }
 
-   // apply command line parameters
-   dev.get()->setDebugLevel(debugLevel);
-   dev.get()->setVerbose(verbose);
-   
    std::cout << "I: using driver " << driverName << std::endl;
    std::cout << "I: device detected: " << dev.get()->getDescription() << 
       " idcode: 0x" << std::hex << dev.get()->getIdCode() << std::dec <<

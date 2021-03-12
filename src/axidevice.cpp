@@ -1,8 +1,10 @@
 #include "axidevice.h"
 
-AXIDevice::AXIDevice() {
+AXIDevice::AXIDevice(bool v, int dl) {
     
    setName("AXI");
+   verbose = v;
+   debugLevel = dl;
 
    fd = open("/dev/uio0", O_RDWR);
 

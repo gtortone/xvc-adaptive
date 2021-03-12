@@ -43,7 +43,7 @@ typedef struct {
 } data_desc;
 
 public:
-   FTDIDevice(int vid=DEFAULT_VID, int pid=DEFAULT_PID, enum ftdi_interface interface=INTERFACE_A);
+   FTDIDevice(int vid=DEFAULT_VID, int pid=DEFAULT_PID, enum ftdi_interface interface=INTERFACE_A, bool v=false, int dl=0);
    ~FTDIDevice();
 
    bool detect(void);

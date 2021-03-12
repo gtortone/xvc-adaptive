@@ -1,9 +1,11 @@
 #include "ftdidevice.h"
 
-FTDIDevice::FTDIDevice(int vid, int pid, enum ftdi_interface interface) {
+FTDIDevice::FTDIDevice(int vid, int pid, enum ftdi_interface interface, bool v, int dl) {
    
    int res = 0;
 
+   verbose = v;
+   debugLevel = dl;
    setName("FTDI");
 
    ftdi_init(&ftdi);

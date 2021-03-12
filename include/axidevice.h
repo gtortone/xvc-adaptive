@@ -32,7 +32,7 @@ typedef struct {
 class AXIDevice : public XVCDriver {
 
 public:
-   AXIDevice();
+   AXIDevice(bool v=false, int dl=0);
    ~AXIDevice();
 
    bool detect(void);
