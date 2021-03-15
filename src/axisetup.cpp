@@ -13,7 +13,7 @@ void AXISetup::clear(void) {
 
 bool AXISetup::loadFile(std::string filename) {
    
-   char id[64], clkDiv[64], clkDelay[64], clkFreq[64], validPoints[64];
+   char id[64], clkDiv[64], clkDelay[64], clkFreq[64], validPoints[64], eyeWidth[64];
 
    fp = fopen(filename.c_str(),"rt");
    if(fp) {
@@ -29,8 +29,8 @@ bool AXISetup::loadFile(std::string filename) {
          buffer[i] = 0;
          if(buffer[0] == '#')
             continue;
-         if (sscanf(buffer,"%64s %64s %64s %64s %64s", 
-                     id, clkDiv, clkDelay, clkFreq, validPoints) == 5) {
+         if (sscanf(buffer,"%64s %64s %64s %64s %64s %64s", 
+                     id, clkDiv, clkDelay, clkFreq, validPoints, eyeWidth) == 6) {
 
             AXICalibItem item;
             item.id = atoi(id);
@@ -38,6 +38,7 @@ bool AXISetup::loadFile(std::string filename) {
             item.clkDelay = atoi(clkDelay);
             item.clkFreq = atoi(clkFreq);
             item.validPoints = atoi(validPoints);
+            item.eyeWidth = atoi(eyeWidth);
             addItem(item);
          }
       }
@@ -54,12 +55,12 @@ bool AXISetup::saveFile(std::string filename) {
    fp = fopen(filename.c_str(),"wt");
    if(fp) {
 
-      fprintf(fp, "%-10s%10s%10s%10s%10s\n", "#id", "divisor", "delay", "frequency", "valid");
+      fprintf(fp, "%-10s%10s%10s%10s%10s%10s\n", "#id", "divisor", "delay", "frequency", "valid", "eyewidth");
 
       std::vector<AXICalibItem>::iterator it;
       for(it=calibList.begin(); it!=calibList.end(); it++)
-         fprintf(fp, "%-10d%10d%10d%10d%10d\n",
-               it->id, it->clkDiv, it->clkDelay, it->clkFreq, it->validPoints);
+         fprintf(fp, "%-10d%10d%10d%10d%10d%10d\n",
+               it->id, it->clkDiv, it->clkDelay, it->clkFreq, it->validPoints, it->eyeWidth);
 
       fclose(fp);
       return true;
@@ -73,8 +74,8 @@ void AXISetup::print(void) {
    std::vector<AXICalibItem>::iterator it;
 
    for(it=calibList.begin(); it!=calibList.end(); it++)
-      printf("id:%d DIV:%d DLY:%d CLK:%d VALID:%d\n", 
-            it->id, it->clkDiv, it->clkDelay, it->clkFreq, it->validPoints);
+      printf("id:%d DIV:%d DLY:%d CLK:%d VALID:%d EYEW:%d\n", 
+            it->id, it->clkDiv, it->clkDelay, it->clkFreq, it->validPoints, it->eyeWidth);
 }
 
 AXICalibItem * AXISetup::getItemById(int id) {
@@ -91,8 +92,8 @@ AXICalibItem * AXISetup::getItemById(int id) {
 
    if(verbose) {
       if(found)
-         printf("AXISetup::getItemById id found: id:%d DIV:%d DLY:%d CLK:%d\n", 
-               it->id, it->clkDiv, it->clkDelay, it->clkFreq);
+         printf("AXISetup::getItemById id found: id:%d DIV:%d DLY:%d CLK:%d VALID:%d EYEW:%d\n", 
+               it->id, it->clkDiv, it->clkDelay, it->clkFreq, it->validPoints, it->eyeWidth);
       else {
          printf("AXISetup::getItemById id not found: id:%d\n", id);
       }
@@ -126,8 +127,9 @@ AXICalibItem * AXISetup::getItemByFrequency(int freq) {
    }
 
    if(verbose) 
-      printf("AXISetup::getItemByFrequency id found req(%d) delta(%d): id:%d DIV:%d DLY:%d CLK:%d\n", 
-            freq, delta, id, calibList[index].clkDiv, calibList[index].clkDelay, calibList[index].clkFreq);
+      printf("AXISetup::getItemByFrequency id found req(%d) delta(%d): id:%d DIV:%d DLY:%d CLK:%d VALID:%d EYEW:%d\n", 
+            freq, delta, id, calibList[index].clkDiv, calibList[index].clkDelay, 
+            calibList[index].clkFreq, calibList[index].validPoints, calibList[index].eyeWidth);
 
    return &calibList[index];
 }
@@ -149,8 +151,9 @@ AXICalibItem * AXISetup::getItemByMaxFrequency(void) {
    }
 
    if(verbose)
-      printf("AXISetup::getItemByMaxFrequency found: id:%d DIV:%d DLY:%d CLK:%d\n",
-         id, calibList[index].clkDiv, calibList[index].clkDelay, calibList[index].clkFreq);
+      printf("AXISetup::getItemByMaxFrequency found: id:%d DIV:%d DLY:%d CLK:%d VALID:%d EYEW:%d\n",
+         id, calibList[index].clkDiv, calibList[index].clkDelay, calibList[index].clkFreq,
+         calibList[index].validPoints, calibList[index].eyeWidth);
 
    return &calibList[index];
 }

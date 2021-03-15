@@ -11,6 +11,7 @@ typedef struct {
    int clkDelay;
    int clkFreq;
    int validPoints;
+   int eyeWidth;
 } AXICalibItem;
 
 class AXISetup {
