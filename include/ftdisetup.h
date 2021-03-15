@@ -8,6 +8,7 @@
 typedef struct {
    int id;
    int clkDiv;
+   bool tdoSam; 
    int clkFreq;
 } FTDICalibItem;
 

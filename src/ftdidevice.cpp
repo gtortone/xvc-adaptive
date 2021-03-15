@@ -36,7 +36,7 @@ FTDIDevice::FTDIDevice(int vid, int pid, enum ftdi_interface interface, bool v, 
    }
 
    // set TDO sampling on clock negative edge
-   setTDOSampling(NEG_EDGE);
+   setTDOPosSampling(false);
 
    // try to detect device
    if(!detect())
@@ -110,12 +110,8 @@ void FTDIDevice::setClockFrequency(int freq) {
          " value: " << value << " frequency req: " << freq << std::endl;
 }
 
-void FTDIDevice::setTDOSampling(int edge) {
-   if(edge == POS_EDGE)
-      samplingEdge = POS_EDGE;
-   else if(edge == NEG_EDGE)
-      samplingEdge = NEG_EDGE;
-   else std::cout << "E: FTDIDevice::setSampling edge not valid" << std::endl;
+void FTDIDevice::setTDOPosSampling(bool value) {
+   samplingEdge = value?POS_EDGE:NEG_EDGE;
 }
 
 bool FTDIDevice::detect(void) {

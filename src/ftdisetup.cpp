@@ -13,7 +13,7 @@ void FTDISetup::clear(void) {
 
 bool FTDISetup::loadFile(std::string filename) {
    
-   char id[64], clkDiv[64], clkFreq[64];
+   char id[64], clkDiv[64], tdoSam[64], clkFreq[64];
 
    fp = fopen(filename.c_str(),"rt");
    if(fp) {
@@ -29,12 +29,13 @@ bool FTDISetup::loadFile(std::string filename) {
          buffer[i] = 0;
          if(buffer[0] == '#')
             continue;
-         if (sscanf(buffer,"%64s %64s %64s", 
-                     id, clkDiv, clkFreq) == 3) {
+         if (sscanf(buffer,"%64s %64s %64s %64s", 
+                     id, clkDiv, tdoSam, clkFreq) == 4) {
 
             FTDICalibItem item;
             item.id = atoi(id);
             item.clkDiv = atoi(clkDiv);
+            item.tdoSam = atoi(tdoSam);
             item.clkFreq = atoi(clkFreq);
             addItem(item);
          }
@@ -52,12 +53,12 @@ bool FTDISetup::saveFile(std::string filename) {
    fp = fopen(filename.c_str(),"wt");
    if(fp) {
 
-      fprintf(fp, "%-10s%10s%10s\n", "#id", "divisor", "frequency");
+      fprintf(fp, "%-10s%10s%10s%10s\n", "#id", "divisor", "pedge", "frequency");
 
       std::vector<FTDICalibItem>::iterator it;
       for(it=calibList.begin(); it!=calibList.end(); it++)
-         fprintf(fp, "%-10d%10d%10d\n",
-               it->id, it->clkDiv, it->clkFreq);
+         fprintf(fp, "%-10d%10d%10d%10d\n",
+               it->id, it->clkDiv, it->tdoSam, it->clkFreq);
 
       fclose(fp);
       return true;
@@ -71,8 +72,8 @@ void FTDISetup::print(void) {
    std::vector<FTDICalibItem>::iterator it;
 
    for(it=calibList.begin(); it!=calibList.end(); it++)
-      printf("id:%d DIV:%d CLK:%d\n", 
-            it->id, it->clkDiv, it->clkFreq);
+      printf("id:%d DIV:%d SAM:%d CLK:%d\n", 
+            it->id, it->clkDiv, it->tdoSam, it->clkFreq);
 }
 
 FTDICalibItem * FTDISetup::getItemById(int id) {
@@ -89,8 +90,8 @@ FTDICalibItem * FTDISetup::getItemById(int id) {
 
    if(verbose) {
       if(found)
-         printf("FTDISetup::getItemById id found: id:%d DIV:%d CLK:%d\n", 
-               it->id, it->clkDiv, it->clkFreq);
+         printf("FTDISetup::getItemById id found: id:%d DIV:%d SAM:%d CLK:%d\n", 
+               it->id, it->clkDiv, it->tdoSam, it->clkFreq);
       else {
          printf("FTDISetup::getItemById id not found: id:%d\n", id);
       }
@@ -124,8 +125,8 @@ FTDICalibItem * FTDISetup::getItemByFrequency(int freq) {
    }
 
    if(verbose) 
-      printf("FTDISetup::getItemByFrequency id found req(%d) delta(%d): id:%d DIV:%d CLK:%d\n", 
-            freq, delta, id, calibList[index].clkDiv, calibList[index].clkFreq);
+      printf("FTDISetup::getItemByFrequency id found req(%d) delta(%d): id:%d DIV:%d SAM:%d CLK:%d\n", 
+            freq, delta, id, calibList[index].clkDiv, calibList[index].tdoSam, calibList[index].clkFreq);
 
    return &calibList[index];
 }
@@ -147,8 +148,8 @@ FTDICalibItem * FTDISetup::getItemByMaxFrequency(void) {
    }
 
    if(verbose)
-      printf("FTDISetup::getItemByMaxFrequency found: id:%d DIV:%d CLK:%d\n",
-         id, calibList[index].clkDiv, calibList[index].clkFreq);
+      printf("FTDISetup::getItemByMaxFrequency found: id:%d DIV:%d SAM:%d CLK:%d\n",
+         id, calibList[index].clkDiv, calibList[index].tdoSam, calibList[index].clkFreq);
 
    return &calibList[index];
 }

@@ -34,8 +34,8 @@ int main(int argc, const char **argv) {
    int cfreq = -1;
    int minfreq = 100000;      // 100 kHz
    int maxfreq = 30000000;    // 30 MHz
-   int cedge = -1;
    int loop = 10;
+   bool pedge = false;
 
    static const char *const usage[] = {
       "xvcserver [options]",
@@ -71,7 +71,7 @@ int main(int argc, const char **argv) {
       OPT_INTEGER(0, "loop", &loop, "set number of loop to use for calibration (default: 10)", NULL, 0, 0),
       OPT_GROUP("FTDI Quick Setup options"),
       OPT_INTEGER(0, "cfreq", &cfreq, "set FTDI clock frequency", NULL, 0, 0),
-      OPT_INTEGER(0, "cedge", &cedge, "set FTDI TDO sampling edge (0: negative, 1:positive - default: 0)", NULL, 0, 0),
+      OPT_BOOLEAN(0, "pedge", &pedge, "set FTDI TDO positive sampling edge (default: negative)"),
       OPT_END(),
    };
 
@@ -177,12 +177,12 @@ int main(int argc, const char **argv) {
       } else std::cout << "E: clock frequency parameter not supported by driver " << driverName << std::endl;
    }
 
-   if(cedge != -1) {
+   if(pedge) {
       if(dev.get()->getName() == "FTDI") {
          quickSetup = true;
-         std::cout << "I: apply sampling edge " << cedge << std::endl;
+         std::cout << "I: apply TDO positive sampling edge" << std::endl;
          FTDIDevice *fdev = (FTDIDevice *) dev.get();
-         fdev->setTDOSampling(cedge);
+         fdev->setTDOPosSampling(true);
       } else std::cout << "E: TDO sampling parameter not supported by driver " << driverName << std::endl;
    }
 
@@ -251,7 +251,9 @@ int main(int argc, const char **argv) {
                if(item != nullptr) {
                   FTDIDevice *fdev = (FTDIDevice *) dev.get();
                   fdev->setClockDiv(DIV5_OFF, item->clkDiv);
-                  std::cout << "I: FTDI setup with id " << id << " successfully (DIV:" << item->clkDiv << ")" << std::endl;
+                  fdev->setTDOPosSampling((bool)item->tdoSam);
+                  std::cout << "I: FTDI setup with id " << id << " successfully (DIV:" 
+                     << item->clkDiv << " SAM:" << item->tdoSam << " FREQ:" << item->clkFreq << ")" << std::endl;
                } else std::cout << "E: setup item with id " << id << " not found" << std::endl;
                goto startServer;
             }
@@ -264,8 +266,9 @@ int main(int argc, const char **argv) {
 
             FTDIDevice *fdev = (FTDIDevice *) dev.get();
             fdev->setClockDiv(DIV5_OFF, item->clkDiv);
+            fdev->setTDOPosSampling((bool)item->tdoSam);
             std::cout << "I: FTDI setup with id " << item->id << " successfully (DIV:" << item->clkDiv << 
-                  " FREQ:" << item->clkFreq << ")" << std::endl;
+                  " SAM:" << item->tdoSam << " FREQ:" << item->clkFreq << ")" << std::endl;
 
          } else { 
             std::cout << "E: file " << loadFilename << " loading error" << std::endl;

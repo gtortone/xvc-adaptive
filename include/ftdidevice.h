@@ -52,14 +52,14 @@ public:
 
    void setClockDiv(bool div5, int value);
    void setClockFrequency(int freq);
-   void setTDOSampling(int edge);
+   void setTDOPosSampling(bool value);
 
    void readBytes(unsigned int len, unsigned char *buf);
    void shift(int nbits, unsigned char *buffer, unsigned char *result);
 
 private:
    struct ftdi_context ftdi;
-   int samplingEdge = POS_EDGE;
+   int samplingEdge = NEG_EDGE;
 };
 
 #endif
