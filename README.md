@@ -28,8 +28,8 @@ AXI Calibration options
     --hyst=<int>              set hysteresis value (default: 0)
 
 AXI Quick Setup options
-    --cdiv=<int>              set clock divisor (0:1023) [AXI driver]
-    --cdel=<int>              set capture delay (0:255) [AXI driver]
+    --cdiv=<int>              set clock divisor (0:1023)
+    --cdel=<int>              set capture delay (0:255)
 
 FTDI options
     --vid=<int>               set FTDI device Vendor ID (default: 0x0403)
@@ -37,13 +37,13 @@ FTDI options
     --interface=<int>         set FTDI device JTAG interface (default: 1)
 
 FTDI Calibration options
-    --minfreq=<int>           set min clock frequency for calibration (default: 1000 - 1 kHz)
+    --minfreq=<int>           set min clock frequency for calibration (default: 100000 - 100 kHz)
     --maxfreq=<int>           set max clock frequency for calibration (default: 30000000 - 30 MHz)
     --loop=<int>              set number of loop to use for calibration (default: 10)
 
 FTDI Quick Setup options
     --cfreq=<int>             set FTDI clock frequency
-    --cedge=<int>             set FTDI TDO sampling edge (0: negative, 1:positive - default: 0)
+    --pedge                   set FTDI TDO positive sampling edge (default: 0 - negative)
 
 ```
 
