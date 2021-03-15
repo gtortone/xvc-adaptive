@@ -1,18 +1,42 @@
 #ifndef AXISETUP_H
 #define AXISETUP_H
 
+#include <iostream>
 #include <vector>
 #include <string>
 #include <string.h>
 
-typedef struct {
+class AXICalibItem {
+
+public:
+   int getId(void) { return id; };
+   int getClockDivisor(void) { return clkDiv; };
+   int getClockDelay(void) { return clkDelay; };
+   int getClockFrequency(void) { return clkFreq; };
+   int getValidPoints(void) { return validPoints; };
+   int getEyeWidth(void) { return eyeWidth; };
+
+   void setId(int v) { id = v; };
+   void setClockDivisor(int v) { clkDiv = v; };
+   void setClockDelay(int v) { clkDelay = v; };
+   void setClockFrequency(int v) { clkFreq = v; };
+   void setValidPoints(int v) { validPoints = v; };
+   void setEyeWidth(int v) { eyeWidth = v; };
+
+   void print(void) {
+      std::cout << "ID: " << id << " DIV:" << clkDiv << " DLY:" << clkDelay <<
+         " FREQ:" << clkFreq << " VALID:" << validPoints << " EYEW:" << eyeWidth << std::endl;
+   }
+
+
+private:
    int id;
    int clkDiv;
    int clkDelay;
    int clkFreq;
    int validPoints;
    int eyeWidth;
-} AXICalibItem;
+};
 
 class AXISetup {
 

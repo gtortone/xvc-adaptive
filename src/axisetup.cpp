@@ -33,12 +33,12 @@ bool AXISetup::loadFile(std::string filename) {
                      id, clkDiv, clkDelay, clkFreq, validPoints, eyeWidth) == 6) {
 
             AXICalibItem item;
-            item.id = atoi(id);
-            item.clkDiv = atoi(clkDiv);
-            item.clkDelay = atoi(clkDelay);
-            item.clkFreq = atoi(clkFreq);
-            item.validPoints = atoi(validPoints);
-            item.eyeWidth = atoi(eyeWidth);
+            item.setId(atoi(id));
+            item.setClockDivisor(atoi(clkDiv));
+            item.setClockDelay(atoi(clkDelay));
+            item.setClockFrequency(atoi(clkFreq));
+            item.setValidPoints(atoi(validPoints));
+            item.setEyeWidth(atoi(eyeWidth));
             addItem(item);
          }
       }
@@ -60,7 +60,8 @@ bool AXISetup::saveFile(std::string filename) {
       std::vector<AXICalibItem>::iterator it;
       for(it=calibList.begin(); it!=calibList.end(); it++)
          fprintf(fp, "%-10d%10d%10d%10d%10d%10d\n",
-               it->id, it->clkDiv, it->clkDelay, it->clkFreq, it->validPoints, it->eyeWidth);
+               it->getId(), it->getClockDivisor(), it->getClockDelay(), it->getClockFrequency(), 
+               it->getValidPoints(), it->getEyeWidth());
 
       fclose(fp);
       return true;
@@ -74,8 +75,7 @@ void AXISetup::print(void) {
    std::vector<AXICalibItem>::iterator it;
 
    for(it=calibList.begin(); it!=calibList.end(); it++)
-      printf("id:%d DIV:%d DLY:%d CLK:%d VALID:%d EYEW:%d\n", 
-            it->id, it->clkDiv, it->clkDelay, it->clkFreq, it->validPoints, it->eyeWidth);
+      it->print();
 }
 
 AXICalibItem * AXISetup::getItemById(int id) {
@@ -84,17 +84,17 @@ AXICalibItem * AXISetup::getItemById(int id) {
    std::vector<AXICalibItem>::iterator it;
 
    for(it=calibList.begin(); it!=calibList.end(); it++) {
-      if(it->id == id) {
+      if(it->getId() == id) {
          found = true;
          break;
       }
    }
 
    if(verbose) {
-      if(found)
-         printf("AXISetup::getItemById id found: id:%d DIV:%d DLY:%d CLK:%d VALID:%d EYEW:%d\n", 
-               it->id, it->clkDiv, it->clkDelay, it->clkFreq, it->validPoints, it->eyeWidth);
-      else {
+      if(found) {
+         printf("AXISetup::getItemById id found\n");
+         it->print();
+      } else {
          printf("AXISetup::getItemById id not found: id:%d\n", id);
       }
    }
@@ -105,7 +105,6 @@ AXICalibItem * AXISetup::getItemById(int id) {
 AXICalibItem * AXISetup::getItemByFrequency(int freq) {
 
    unsigned int i = 0;
-   int id = 0;
    int index = 0;
    int delta = 0;
    bool init = false;
@@ -114,22 +113,20 @@ AXICalibItem * AXISetup::getItemByFrequency(int freq) {
       
       if (!init) {
          init = true;
-         id = calibList[i].id;
-         delta = abs(freq - calibList[i].clkFreq);
+         delta = abs(freq - calibList[i].getClockFrequency());
          continue;
       }
 
-      if(delta > abs(freq - calibList[i].clkFreq)) {
-         delta = abs(freq - calibList[i].clkFreq);
-         id = calibList[i].id;
+      if(delta > abs(freq - calibList[i].getClockFrequency())) {
+         delta = abs(freq - calibList[i].getClockFrequency());
          index = i;
       }
    }
 
-   if(verbose) 
-      printf("AXISetup::getItemByFrequency id found req(%d) delta(%d): id:%d DIV:%d DLY:%d CLK:%d VALID:%d EYEW:%d\n", 
-            freq, delta, id, calibList[index].clkDiv, calibList[index].clkDelay, 
-            calibList[index].clkFreq, calibList[index].validPoints, calibList[index].eyeWidth);
+   if(verbose) {
+      printf("AXISetup::getItemByFrequency id found req(%d) delta(%d)\n", freq, delta);
+      calibList[index].print();
+   }
 
    return &calibList[index];
 }
@@ -137,23 +134,21 @@ AXICalibItem * AXISetup::getItemByFrequency(int freq) {
 AXICalibItem * AXISetup::getItemByMaxFrequency(void) {
 
    unsigned int i = 0;
-   int id = 0;
    int maxfreq = 0;
    int index = 0;
 
    for(i=0; i<calibList.size(); i++) {
 
-      if(calibList[i].clkFreq > maxfreq) {
-         maxfreq = calibList[i].clkFreq; 
-         id = calibList[i].id;
+      if(calibList[i].getClockFrequency() > maxfreq) {
+         maxfreq = calibList[i].getClockFrequency();
          index = i;
       }
    }
 
-   if(verbose)
-      printf("AXISetup::getItemByMaxFrequency found: id:%d DIV:%d DLY:%d CLK:%d VALID:%d EYEW:%d\n",
-         id, calibList[index].clkDiv, calibList[index].clkDelay, calibList[index].clkFreq,
-         calibList[index].validPoints, calibList[index].eyeWidth);
+   if(verbose) {
+      printf("AXISetup::getItemByMaxFrequency found\n");
+      calibList[index].print();
+   }
 
    return &calibList[index];
 }

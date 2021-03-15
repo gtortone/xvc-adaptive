@@ -59,8 +59,8 @@ int main(int argc, const char **argv) {
       OPT_GROUP("AXI Calibration options"),
       OPT_INTEGER(0, "hyst", &hyst, "set hysteresis value (default: 0)"),
       OPT_GROUP("AXI Quick Setup options"),
-      OPT_INTEGER(0, "cdiv", &cdiv, "set clock divisor (0:1023) [AXI driver]", NULL, 0, 0),
-      OPT_INTEGER(0, "cdel", &cdel, "set capture delay (0:255) [AXI driver]", NULL, 0, 0),
+      OPT_INTEGER(0, "cdiv", &cdiv, "set clock divisor (0:1023)", NULL, 0, 0),
+      OPT_INTEGER(0, "cdel", &cdel, "set capture delay (0:255)", NULL, 0, 0),
       OPT_GROUP("FTDI options"),
       OPT_INTEGER(0, "vid", &vid, "set FTDI device Vendor ID (default: 0x0403)", NULL, 0, 0),
       OPT_INTEGER(0, "pid", &pid, "set FTDI device Product ID (default: 0x6010)", NULL, 0, 0),
@@ -71,7 +71,7 @@ int main(int argc, const char **argv) {
       OPT_INTEGER(0, "loop", &loop, "set number of loop to use for calibration (default: 10)", NULL, 0, 0),
       OPT_GROUP("FTDI Quick Setup options"),
       OPT_INTEGER(0, "cfreq", &cfreq, "set FTDI clock frequency", NULL, 0, 0),
-      OPT_BOOLEAN(0, "pedge", &pedge, "set FTDI TDO positive sampling edge (default: negative)"),
+      OPT_BOOLEAN(0, "pedge", &pedge, "set FTDI TDO positive sampling edge (default: 0 - negative"),
       OPT_END(),
    };
 
@@ -208,10 +208,10 @@ int main(int argc, const char **argv) {
                item = setup->getItemById(id);
                if(item != nullptr) {
                   AXIDevice *adev = (AXIDevice *) dev.get();
-                  adev->setClockDelay(item->clkDelay);
-                  adev->setClockDiv(item->clkDiv);
-                  std::cout << "I: AXI setup with id " << id << " successfully (DIV:" << item->clkDiv << 
-                     " DLY:" << item->clkDelay << ")" << std::endl;
+                  adev->setClockDelay(item->getClockDelay());
+                  adev->setClockDiv(item->getClockDivisor());
+                  std::cout << "I: AXI setup with id " << id << " successfully" << std::endl;
+                  item->print();
                } else std::cout << "E: setup item with id " << id << " not found" << std::endl;
                goto startServer;
             }
@@ -223,10 +223,10 @@ int main(int argc, const char **argv) {
                item = setup->getItemByMaxFrequency();
 
             AXIDevice *adev = (AXIDevice *) dev.get();
-            adev->setClockDelay(item->clkDelay);
-            adev->setClockDiv(item->clkDiv);
-            std::cout << "I: AXI setup with id " << item->id << " successfully (DIV:" << item->clkDiv << 
-                  " DLY:" << item->clkDelay << " FREQ:" << item->clkFreq << ")" << std::endl;
+            adev->setClockDelay(item->getClockDelay());
+            adev->setClockDiv(item->getClockDivisor());
+            std::cout << "I: AXI setup with id " << item->getId() << " successfully" << std::endl;
+            item->print();
 
          } else { 
             std::cout << "E: file " << loadFilename << " loading error" << std::endl;
@@ -250,10 +250,10 @@ int main(int argc, const char **argv) {
                item = setup->getItemById(id);
                if(item != nullptr) {
                   FTDIDevice *fdev = (FTDIDevice *) dev.get();
-                  fdev->setClockDiv(DIV5_OFF, item->clkDiv);
-                  fdev->setTDOPosSampling((bool)item->tdoSam);
-                  std::cout << "I: FTDI setup with id " << id << " successfully (DIV:" 
-                     << item->clkDiv << " SAM:" << item->tdoSam << " FREQ:" << item->clkFreq << ")" << std::endl;
+                  fdev->setClockDiv(DIV5_OFF, item->getClockDivisor());
+                  fdev->setTDOPosSampling((bool)item->getTDOSampling());
+                  std::cout << "I: FTDI setup with id " << id << " successfully" << std::endl;
+                  item->print();
                } else std::cout << "E: setup item with id " << id << " not found" << std::endl;
                goto startServer;
             }
@@ -265,10 +265,10 @@ int main(int argc, const char **argv) {
                item = setup->getItemByMaxFrequency();
 
             FTDIDevice *fdev = (FTDIDevice *) dev.get();
-            fdev->setClockDiv(DIV5_OFF, item->clkDiv);
-            fdev->setTDOPosSampling((bool)item->tdoSam);
-            std::cout << "I: FTDI setup with id " << item->id << " successfully (DIV:" << item->clkDiv << 
-                  " SAM:" << item->tdoSam << " FREQ:" << item->clkFreq << ")" << std::endl;
+            fdev->setClockDiv(DIV5_OFF, item->getClockDivisor());
+            fdev->setTDOPosSampling((bool)item->getTDOSampling());
+            std::cout << "I: FTDI setup with id " << item->getId() << " successfully" << std::endl;
+            item->print();
 
          } else { 
             std::cout << "E: file " << loadFilename << " loading error" << std::endl;

@@ -95,17 +95,17 @@ void AXICalibrator::start(AXISetup *setup) {
          if (validPoints >= cdiv/2) {
 
             AXICalibItem item;
-            item.id = id++;
-            item.clkDiv = cdiv;
-            item.clkDelay = (maxDelay + minDelay) / 2;
-            item.clkFreq = cfreq;
-            item.validPoints = validPoints;
-            item.eyeWidth = (validPoints / float((cdiv + 1) * 2)) * 100;
+            item.setId(id++);
+            item.setClockDivisor(cdiv);
+            item.setClockDelay((maxDelay + minDelay) / 2);
+            item.setClockFrequency(cfreq);
+            item.setValidPoints(validPoints);
+            item.setEyeWidth((validPoints / float((cdiv + 1) * 2)) * 100);
 
             if(debugLevel) {
                char msg[256];
                sprintf(msg, "AXICalibrator::startCalibration: idcode OK - clkdelay: %d - clkdiv: %d - clkfreq: %d - points: %d - eyewidth: %d",
-                  item.clkDelay, item.clkDiv, item.clkFreq, item.validPoints, item.eyeWidth);
+                  item.getClockDelay(), item.getClockDivisor(), item.getClockFrequency(), item.getValidPoints(), item.getEyeWidth());
                printDebug(msg, 2);
             }
 

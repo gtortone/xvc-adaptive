@@ -55,10 +55,10 @@ void FTDICalibrator::start(FTDISetup *setup, int minFreq, int maxFreq, int loop)
          if(match == loop) {
 
             FTDICalibItem item;
-            item.id = ++id;
-            item.clkDiv = cdiv;
-            item.tdoSam = tdoSampling;
-            item.clkFreq = cfreq;
+            item.setId(++id);
+            item.setClockDivisor(cdiv);
+            item.setTDOSampling(tdoSampling);
+            item.setClockFrequency(cfreq);
 
             if(debugLevel) {
                char msg[128];

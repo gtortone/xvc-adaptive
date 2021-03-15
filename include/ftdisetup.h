@@ -1,16 +1,36 @@
 #ifndef FTDISETUP_H
 #define FTDISETUP_H
 
+#include <iostream>
 #include <vector>
 #include <string>
 #include <string.h>
 
-typedef struct {
+class FTDICalibItem {
+
+public:
+	int getId(void) { return id; };
+   int getClockDivisor(void) { return clkDiv; };
+	bool getTDOSampling(void) { return tdoSam; };
+   int getClockFrequency(void) { return clkFreq; };
+
+   void setId(int v) { id = v; };
+   void setClockDivisor(int v) { clkDiv = v; };
+	void setTDOSampling(bool v) { tdoSam = v; };
+   void setClockFrequency(int v) { clkFreq = v; };
+
+   void print(void) {
+      std::cout << "ID: " << id << " DIV:" << clkDiv << " TDOSAM:" << tdoSam <<
+         " FREQ:" << clkFreq << std::endl;
+   }
+
+
+private:
    int id;
    int clkDiv;
-   bool tdoSam; 
+	bool tdoSam;
    int clkFreq;
-} FTDICalibItem;
+};
 
 class FTDISetup {
 

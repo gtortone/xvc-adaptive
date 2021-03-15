@@ -33,10 +33,10 @@ bool FTDISetup::loadFile(std::string filename) {
                      id, clkDiv, tdoSam, clkFreq) == 4) {
 
             FTDICalibItem item;
-            item.id = atoi(id);
-            item.clkDiv = atoi(clkDiv);
-            item.tdoSam = atoi(tdoSam);
-            item.clkFreq = atoi(clkFreq);
+            item.setId(atoi(id));
+            item.setClockDivisor(atoi(clkDiv));
+            item.setTDOSampling(atoi(tdoSam));
+            item.setClockFrequency(atoi(clkFreq));
             addItem(item);
          }
       }
@@ -58,7 +58,7 @@ bool FTDISetup::saveFile(std::string filename) {
       std::vector<FTDICalibItem>::iterator it;
       for(it=calibList.begin(); it!=calibList.end(); it++)
          fprintf(fp, "%-10d%10d%10d%10d\n",
-               it->id, it->clkDiv, it->tdoSam, it->clkFreq);
+               it->getId(), it->getClockDivisor(), it->getTDOSampling(), it->getClockFrequency());
 
       fclose(fp);
       return true;
@@ -72,8 +72,7 @@ void FTDISetup::print(void) {
    std::vector<FTDICalibItem>::iterator it;
 
    for(it=calibList.begin(); it!=calibList.end(); it++)
-      printf("id:%d DIV:%d SAM:%d CLK:%d\n", 
-            it->id, it->clkDiv, it->tdoSam, it->clkFreq);
+      it->print();
 }
 
 FTDICalibItem * FTDISetup::getItemById(int id) {
@@ -82,17 +81,17 @@ FTDICalibItem * FTDISetup::getItemById(int id) {
    std::vector<FTDICalibItem>::iterator it;
 
    for(it=calibList.begin(); it!=calibList.end(); it++) {
-      if(it->id == id) {
+      if(it->getId() == id) {
          found = true;
          break;
       }
    }
 
    if(verbose) {
-      if(found)
-         printf("FTDISetup::getItemById id found: id:%d DIV:%d SAM:%d CLK:%d\n", 
-               it->id, it->clkDiv, it->tdoSam, it->clkFreq);
-      else {
+      if(found) {
+         printf("FTDISetup::getItemById id found\n"); 
+         it->print();
+      } else {
          printf("FTDISetup::getItemById id not found: id:%d\n", id);
       }
    }
@@ -103,7 +102,6 @@ FTDICalibItem * FTDISetup::getItemById(int id) {
 FTDICalibItem * FTDISetup::getItemByFrequency(int freq) {
 
    unsigned int i = 0;
-   int id = 0;
    int index = 0;
    int delta = 0;
    bool init = false;
@@ -112,21 +110,20 @@ FTDICalibItem * FTDISetup::getItemByFrequency(int freq) {
       
       if (!init) {
          init = true;
-         id = calibList[i].id;
-         delta = abs(freq - calibList[i].clkFreq);
+         delta = abs(freq - calibList[i].getClockFrequency());
          continue;
       }
 
-      if(delta > abs(freq - calibList[i].clkFreq)) {
-         delta = abs(freq - calibList[i].clkFreq);
-         id = calibList[i].id;
+      if(delta > abs(freq - calibList[i].getClockFrequency())) {
+         delta = abs(freq - calibList[i].getClockFrequency());
          index = i;
       }
    }
 
-   if(verbose) 
-      printf("FTDISetup::getItemByFrequency id found req(%d) delta(%d): id:%d DIV:%d SAM:%d CLK:%d\n", 
-            freq, delta, id, calibList[index].clkDiv, calibList[index].tdoSam, calibList[index].clkFreq);
+   if(verbose) {
+      printf("FTDISetup::getItemByFrequency id found req(%d) delta(%d)\n", freq, delta);
+      calibList[index].print();
+   }
 
    return &calibList[index];
 }
@@ -134,22 +131,21 @@ FTDICalibItem * FTDISetup::getItemByFrequency(int freq) {
 FTDICalibItem * FTDISetup::getItemByMaxFrequency(void) {
 
    unsigned int i = 0;
-   int id = 0;
    int maxfreq = 0;
    int index = 0;
 
    for(i=0; i<calibList.size(); i++) {
 
-      if(calibList[i].clkFreq > maxfreq) {
-         maxfreq = calibList[i].clkFreq; 
-         id = calibList[i].id;
+      if(calibList[i].getClockFrequency() > maxfreq) {
+         maxfreq = calibList[i].getClockFrequency(); 
          index = i;
       }
    }
 
-   if(verbose)
-      printf("FTDISetup::getItemByMaxFrequency found: id:%d DIV:%d SAM:%d CLK:%d\n",
-         id, calibList[index].clkDiv, calibList[index].tdoSam, calibList[index].clkFreq);
+   if(verbose) {
+      printf("FTDISetup::getItemByMaxFrequency found\n");
+      calibList[index].print();
+   }
 
    return &calibList[index];
 }
