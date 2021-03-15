@@ -140,11 +140,6 @@ void AXIDevice::shift(int nbits, unsigned char *buffer, unsigned char *result) {
          sprintf(msg, "Bytes:%d Bits:%d TMS:0x%08x TDI:0x%08x TDO:0x%08x", (bytesLeft>4)?4:bytesLeft, (bitsLeft>32)?32:bitsLeft, *tms, *tdi, tdoVal);
          printDebug(msg, 3);
       }     
-      if(*tms != 0) {
-         char msg[128];
-         sprintf(msg, "Bytes:%d Bits:%d TMS:0x%08x TDI:0x%08x TDO:0x%08x", (bytesLeft>4)?4:bytesLeft, (bitsLeft>32)?32:bitsLeft, *tms, *tdi, tdoVal);
-         printf("%s\n",msg);
-      }
 
       bytesLeft -= 4;
       bitsLeft -= 32;

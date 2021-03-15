@@ -71,7 +71,7 @@ int main(int argc, const char **argv) {
       OPT_INTEGER(0, "loop", &loop, "set number of loop to use for calibration (default: 10)", NULL, 0, 0),
       OPT_GROUP("FTDI Quick Setup options"),
       OPT_INTEGER(0, "cfreq", &cfreq, "set FTDI clock frequency", NULL, 0, 0),
-      OPT_BOOLEAN(0, "pedge", &pedge, "set FTDI TDO positive sampling edge (default: 0 - negative"),
+      OPT_BOOLEAN(0, "pedge", &pedge, "set FTDI TDO positive sampling edge (default: 0 - negative)"),
       OPT_END(),
    };
 
