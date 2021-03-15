@@ -30,7 +30,7 @@ bool AXIDevice::detect(void) {
    // read id code at low clock frequency with delay sweep
    setClockDiv(MAX_CLOCK_DIV);
 
-	for(int cdel=0; cdel<MAX_CLOCK_DELAY; cdel++) {
+   for(int cdel=0; cdel<MAX_CLOCK_DELAY; cdel++) {
 
       setClockDelay(cdel);
       tempId = scanChain();
@@ -78,41 +78,27 @@ void AXIDevice::shift(int nbits, unsigned char *buffer, unsigned char *result) {
 
    int bytesLeft = nbytes;
    int bitsLeft = nbits;
-   int byteIndex = 0;
-   unsigned int *tdi, *tms, tdo; 
-   unsigned int tmsVal, tdiVal;
-   unsigned int last_tdi, last_tms, last_length;
-
+   unsigned int *tdi, *tms, *tdo; 
+   unsigned int tmsVal, tdiVal, tdoVal;
+   unsigned int last_tdi, last_tms; 
+   
    last_tms = ptr->tms_offset = 0;
    last_tdi = ptr->tdi_offset = 0;
-   last_length = ptr->length_offset = 0;
+   ptr->length_offset = 32;
+   
+   tms = reinterpret_cast<unsigned int*>(buffer);
+   tdi = reinterpret_cast<unsigned int*>(buffer+nbytes);
+   tdo = reinterpret_cast<unsigned int*>(result);
 
+   while (bitsLeft > 0) {
 
-   while (bytesLeft > 0) {
-
-      int len = 0;
-
-      if (bitsLeft >= 32) {
-
-         len = 4;
-         if (32 != last_length)
-         {
-            ptr->length_offset = 32;
-            last_length = 32;
-         }
-
-         tms = reinterpret_cast<unsigned int*>(&buffer[byteIndex]);
-         tdi = reinterpret_cast<unsigned int*>(&buffer[byteIndex + nbytes]);
-
-      } else {
-
-         len = bytesLeft;
+      if (bitsLeft < 32) {
+         
          ptr->length_offset = bitsLeft;
-         last_length = bitsLeft;
    
          tmsVal = tdiVal = 0;
-         memcpy(&tmsVal, &buffer[byteIndex], bytesLeft);
-         memcpy(&tdiVal, &buffer[byteIndex + nbytes], bytesLeft);
+         memcpy(&tmsVal, tms, bytesLeft);
+         memcpy(&tdiVal, tdi, bytesLeft);
 
          tms = &tmsVal;
          tdi = &tdiVal;
@@ -135,24 +121,36 @@ void AXIDevice::shift(int nbits, unsigned char *buffer, unsigned char *result) {
 
       while (ptr->ctrl_offset) { }
 
-      tdo = ptr->tdo_offset;
-      
-      // aligns captured TDO vector to lsb, compensates lack of hardware shifts  
+      tdoVal = ptr->tdo_offset;
+           
       if (bitsLeft < 32) {
-        tdo = tdo >> (32 - bitsLeft);
-      }
+      
+        // aligns captured TDO vector to lsb, compensates lack of hardware shifts 
+        tdoVal = tdoVal >> (32 - bitsLeft);
+        memcpy(tdo, &tdoVal, bytesLeft);
 
-      memcpy(&result[byteIndex], &tdo, len);
+      } else {
+
+        tdo[0] = tdoVal;
+        
+      }
 
       if(debugLevel) {
          char msg[128];
-         sprintf(msg, "Bytes:%d Bits:%d TMS:0x%08x TDI:0x%08x TDO:0x%08x", len, (bitsLeft>32)?32:bitsLeft, *tms, *tdi, tdo);
+         sprintf(msg, "Bytes:%d Bits:%d TMS:0x%08x TDI:0x%08x TDO:0x%08x", (bytesLeft>4)?4:bytesLeft, (bitsLeft>32)?32:bitsLeft, *tms, *tdi, tdoVal);
          printDebug(msg, 3);
+      }     
+      if(*tms != 0) {
+         char msg[128];
+         sprintf(msg, "Bytes:%d Bits:%d TMS:0x%08x TDI:0x%08x TDO:0x%08x", (bytesLeft>4)?4:bytesLeft, (bitsLeft>32)?32:bitsLeft, *tms, *tdi, tdoVal);
+         printf("%s\n",msg);
       }
 
       bytesLeft -= 4;
       bitsLeft -= 32;
-      byteIndex += 4;
+      tms++; // tms, tdi and tdo  pointers are not valid when bitsLeft < 32
+      tdi++; // but then the are not used anymore
+      tdo++;
 
    } // end while
 }

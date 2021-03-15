@@ -17,11 +17,26 @@ void IOServer::setVectorLength(int v) {
       free(result);
 
    buffer = (unsigned char *) malloc(sizeof(char) * vectorLength);
+   
+   // check for malloc failure
+   if (buffer == NULL) {
+      std::cout << "buffer allocation failed" << std::endl;
+      exit(-1); 
+   }
+
+  
    result = (unsigned char *) malloc(sizeof(char) * vectorLength/2);
+   
+   // check for malloc failure
+   if (result == NULL) {
+      std::cout << "result allocation failed" << std::endl;
+      exit(-1); 
+   }
+
 
    xvcInfo.clear();
    xvcInfo = "xvcServer_v1.0:";
-   xvcInfo.append(std::to_string(vectorLength));
+   xvcInfo.append(std::to_string(vectorLength/2));
    xvcInfo.append("\n");
 }
 
@@ -32,7 +47,9 @@ int IOServer::sread(int fd, void *target, int len) {
    while (len) {
 
       int r = read(fd, t, len);
-
+      if (r<len) 
+         printf("Got %d bytes, still %d bytes remaining \n", r, len);
+      
       if (r <= 0)
          return r;
 
@@ -167,7 +184,10 @@ bool IOServer::handleData(int fd) {
          if (sread(fd, cmd, 9) != 1)
             return 1;
 
-         memcpy(result, cmd + 5, 4);
+         unsigned int tck_period=10000; //100 kHz
+         //unsigned int tck_period=10; //100 MHz
+         memcpy(result, &tck_period, 4);
+         //memcpy(result, cmd+5, 4);
 
          if (write(fd, result, 4) != 4) {
             std::cout << "E: IOServer: reply error" << std::endl;
@@ -176,7 +196,8 @@ bool IOServer::handleData(int fd) {
 
          if (verbose) {
             std::cout << "IOServer: received command: 'settck' " << (int)time(NULL) << std::endl;
-            std::cout << "IOServer: replied with " << result << std::endl;
+            std::cout << "IOServer: replied with 0x" << std::hex << (char)result[3] << (char)result[2] << (char)result[1] << (char)result[0]  << std::dec << std::endl;
+            
          }
 
          break;
@@ -216,9 +237,11 @@ bool IOServer::handleData(int fd) {
          return 1;
       }
 
+
       if (sread(fd, buffer, nbytes * 2) != 1) {
          std::cout << "E: IOServer: reading data failed " << std::endl;
          return 1;
+         
       }
 
       if (verbose) {
