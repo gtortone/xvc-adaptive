@@ -40,7 +40,7 @@ FTDIDevice::FTDIDevice(int vid, int pid, enum ftdi_interface interface, bool v, 
 
    // try to detect device
    if(!detect())
-      throw std::runtime_error("E: FTDIDevice: failed to detect device");
+      std::cout << "WARNING: FTDIDevice: failed to detect JTAG target" << std::endl;
 }
 
 FTDIDevice::~FTDIDevice() {

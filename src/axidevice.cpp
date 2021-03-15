@@ -15,7 +15,7 @@ AXIDevice::AXIDevice(bool v, int dl) {
 
    // try to detect device
    if(!detect()) 
-      printf("WARNING: AXIDevice: failed to detect device (idcode: 0x%08X)\n", idcode);
+      printf("WARNING: AXIDevice: failed to detect JTAG target (idcode: 0x%08X)\n", idcode);
 }
 
 bool AXIDevice::detect(void) {
