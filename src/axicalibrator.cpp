@@ -103,7 +103,7 @@ void AXICalibrator::start(AXISetup *setup) {
             item.eyeWidth = (validPoints / float((cdiv + 1) * 2)) * 100;
 
             if(debugLevel) {
-               char msg[128];
+               char msg[256];
                sprintf(msg, "AXICalibrator::startCalibration: idcode OK - clkdelay: %d - clkdiv: %d - clkfreq: %d - points: %d - eyewidth: %d",
                   item.clkDelay, item.clkDiv, item.clkFreq, item.validPoints, item.eyeWidth);
                printDebug(msg, 2);
