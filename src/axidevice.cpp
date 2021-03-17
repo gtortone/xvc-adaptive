@@ -43,13 +43,13 @@ bool AXIDevice::detect(void) {
          idcmd = devDB.idToIDCmd(idcode);
          desc = tempDesc;
 
-         if(verbose)
-            printf("AXIDevice::detect device detected: idcode:0x%X irlen:%d idcmd:0x%X desc:%s\n", 
-                  idcode, irlen, idcmd, desc.c_str());
-
          detected = true;
       }
    }
+
+   if(detected && verbose)
+      printf("AXIDevice::detect device detected: idcode:0x%X irlen:%d idcmd:0x%X desc:%s\n",
+         idcode, irlen, idcmd, desc.c_str());
 
    printDebug("AXIDevice::detect end", 1);
 

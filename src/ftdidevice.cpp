@@ -136,12 +136,12 @@ bool FTDIDevice::detect(void) {
       idcmd = devDB.idToIDCmd(idcode);
       desc = tempDesc;
 
-      if(verbose)
-         printf("FTDIDevice::detect device detected: idcode:0x%X irlen:%d idcmd:0x%X desc:%s\n",
-            idcode, irlen, idcmd, desc.c_str());
-
       detected = true;
    }
+
+   if(detected && verbose)
+      printf("FTDIDevice::detect device detected: idcode:0x%X irlen:%d idcmd:0x%X desc:%s\n",
+         idcode, irlen, idcmd, desc.c_str());
 
    printDebug("FTDIDevice::detect end", 1);
 
