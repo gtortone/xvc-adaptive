@@ -80,6 +80,8 @@ int main(int argc, const char **argv) {
    argparse_describe(&argparse, "\nXilinx Virtual Cable (XVC) adaptive server", "");
    argparse_parse(&argparse, argc, argv);
 
+   std::cout << "I: using driver " << driverName << std::endl;
+
    if(std::string(driverName) == "AXI") {
       try {
          dev.reset(new AXIDevice(verbose, debugLevel));
@@ -99,11 +101,11 @@ int main(int argc, const char **argv) {
       exit(-1);
    }
 
-   std::cout << "I: using driver " << driverName << std::endl;
-   std::cout << "I: device detected: " << dev.get()->getDescription() << 
-      " idcode: 0x" << std::hex << dev.get()->getIdCode() << std::dec <<
-      " irlen: " << dev.get()->getIrLen() <<
-      " idcmd: 0x" << std::hex << dev.get()->getIdCmd() << std::dec << std::endl;
+   if(dev.get()->isDetected())
+      std::cout << "I: device detected: " << dev.get()->getDescription() << 
+         " idcode: 0x" << std::hex << dev.get()->getIdCode() << std::dec <<
+         " irlen: " << dev.get()->getIrLen() <<
+         " idcmd: 0x" << std::hex << dev.get()->getIdCmd() << std::dec << std::endl;
 
    if(scan)
       exit(0);

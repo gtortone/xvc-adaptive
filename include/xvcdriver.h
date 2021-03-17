@@ -22,6 +22,7 @@ public:
    virtual void shift(int nbits, unsigned char *buffer, unsigned char *result) = 0;
    uint32_t scanChain(void);
    uint32_t probeIdCode(void);
+   bool isDetected(void) { return detected; };
 
    uint32_t getIdCode(void) { return idcode; };
    int getIdCmd(void) { return idcmd; };
@@ -35,6 +36,7 @@ protected:
 
    int debugLevel = 0;
    bool verbose = false;
+   bool detected = false;
 
    void setName(std::string n) { name = n; };
    void printDebug(std::string msg, int lvl);

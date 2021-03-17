@@ -46,6 +46,8 @@ bool AXIDevice::detect(void) {
          if(verbose)
             printf("AXIDevice::detect device detected: idcode:0x%X irlen:%d idcmd:0x%X desc:%s\n", 
                   idcode, irlen, idcmd, desc.c_str());
+
+         detected = true;
       }
    }
 
