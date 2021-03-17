@@ -47,8 +47,8 @@ int IOServer::sread(int fd, void *target, int len) {
    while (len) {
 
       int r = read(fd, t, len);
-      if (r<len) 
-         printf("Got %d bytes, still %d bytes remaining \n", r, len);
+      //if (r<len) 
+      //   printf("Got %d bytes, still %d bytes remaining \n", r, len);
       
       if (r <= 0)
          return r;
