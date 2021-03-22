@@ -35,7 +35,7 @@ FTDI options
     --vid=<int>               set FTDI device Vendor ID (default: 0x0403)
     --pid=<int>               set FTDI device Product ID (default: 0x6010)
     --interface=<int>         set FTDI device JTAG interface (default: 1)
-    --serial=<str>            set serial number (defult: none)
+    --serial=<str>            set serial number (default: none)
 
 FTDI Calibration options
     --minfreq=<int>           set min clock frequency for calibration (default: 100000 - 100 kHz)
