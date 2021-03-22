@@ -35,6 +35,7 @@ FTDI options
     --vid=<int>               set FTDI device Vendor ID (default: 0x0403)
     --pid=<int>               set FTDI device Product ID (default: 0x6010)
     --interface=<int>         set FTDI device JTAG interface (default: 1)
+    --serial=<str>            set serial number (defult: none)
 
 FTDI Calibration options
     --minfreq=<int>           set min clock frequency for calibration (default: 100000 - 100 kHz)
@@ -44,13 +45,12 @@ FTDI Calibration options
 FTDI Quick Setup options
     --cfreq=<int>             set FTDI clock frequency
     --pedge                   set FTDI TDO positive sampling edge (default: 0 - negative)
-
 ```
 
 ## Build
 FTDI code depends from libusb and libftdi
 ```
-apt-get install libusb-1.0-0 libusb-1.0-0-dev libftdi1 libftdi-dev
+apt-get install libusb-1.0-0 libusb-1.0-0-dev libftdi1 libftdi1-dev
 ```
 
 ## AXI driver
