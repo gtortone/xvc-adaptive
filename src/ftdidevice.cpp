@@ -1,6 +1,6 @@
 #include "ftdidevice.h"
 
-FTDIDevice::FTDIDevice(int vid, int pid, enum ftdi_interface interface, bool v, int dl) {
+FTDIDevice::FTDIDevice(int vid, int pid, enum ftdi_interface interface, const char *serial, bool v, int dl) {
    
    int res = 0;
 
@@ -8,15 +8,23 @@ FTDIDevice::FTDIDevice(int vid, int pid, enum ftdi_interface interface, bool v, 
    debugLevel = dl;
    setName("FTDI");
 
-   ftdi_init(&ftdi);
-   if (ftdi_usb_open_desc(&ftdi, vid, pid, NULL, NULL) < 0) {
-      std::string errmsg(ftdi_get_error_string(&ftdi));
+   if ((ftdi = ftdi_new()) == 0) {
+      std::string errmsg(ftdi_get_error_string(ftdi));
+      throw std::runtime_error("E: FTDIDevice failed allocation (" + errmsg + ")");
+   }
+
+   if(ftdi_set_interface(ftdi, interface) < 0) {
+      std::string errmsg(ftdi_get_error_string(ftdi));
+      throw std::runtime_error("E: FTDIDevice can't set interface (" + errmsg + ")");
+   }
+
+   if (ftdi_usb_open_desc(ftdi, vid, pid, NULL, serial) < 0) {
+      std::string errmsg(ftdi_get_error_string(ftdi));
       throw std::runtime_error("E: FTDIDevice can't open device (" + errmsg + ")");
    }
 
-   ftdi_usb_reset(&ftdi);
-   ftdi_set_interface(&ftdi, interface);
-   ftdi_set_latency_timer(&ftdi, 1);
+   ftdi_usb_reset(ftdi);
+   ftdi_set_latency_timer(ftdi, 1);
 
    unsigned char buf[] = {
       DIS_DIV_5,
@@ -25,13 +33,13 @@ FTDIDevice::FTDIDevice(int vid, int pid, enum ftdi_interface interface, bool v, 
       0x82, 0x00, 0x00,
       SEND_IMMEDIATE };
 
-   ftdi_set_bitmode(&ftdi, 0x0B, BITMODE_MPSSE);
+   ftdi_set_bitmode(ftdi, 0x0B, BITMODE_MPSSE);
 
-   ftdi_usb_purge_rx_buffer(&ftdi);
-   ftdi_usb_purge_tx_buffer(&ftdi);
+   ftdi_usb_purge_rx_buffer(ftdi);
+   ftdi_usb_purge_tx_buffer(ftdi);
 
-   if ((res = ftdi_write_data(&ftdi, buf, sizeof(buf))) != sizeof(buf)) {
-      std::string errmsg(ftdi_get_error_string(&ftdi));
+   if ((res = ftdi_write_data(ftdi, buf, sizeof(buf))) != sizeof(buf)) {
+      std::string errmsg(ftdi_get_error_string(ftdi));
       throw std::runtime_error("E: FTDIDevice error initializing MPSSE (" + errmsg + ")");
    }
 
@@ -44,9 +52,9 @@ FTDIDevice::FTDIDevice(int vid, int pid, enum ftdi_interface interface, bool v, 
 }
 
 FTDIDevice::~FTDIDevice() {
-   ftdi_usb_reset(&ftdi);
-   ftdi_usb_close(&ftdi);
-   ftdi_deinit(&ftdi);
+   ftdi_usb_reset(ftdi);
+   ftdi_usb_close(ftdi);
+   ftdi_deinit(ftdi);
 }
 
 int FTDIDevice::getDivisorByFrequency(bool div5, int freq) {
@@ -75,7 +83,7 @@ void FTDIDevice::setClockDiv(bool div5, int value) {
       SEND_IMMEDIATE
    };
 
-   ftdi_write_data(&ftdi, buf, sizeof(buf)); 
+   ftdi_write_data(ftdi, buf, sizeof(buf)); 
 }
 
 void FTDIDevice::setClockFrequency(int freq) {
@@ -154,12 +162,12 @@ void FTDIDevice::readBytes(unsigned int len, unsigned char *buf) {
    to_read = len;
    read = 0;
    
-   last_read = ftdi_read_data(&ftdi, buf, to_read);
+   last_read = ftdi_read_data(ftdi, buf, to_read);
    if (last_read > 0)
       read += last_read;
 
    while (read < to_read) {
-      last_read = ftdi_read_data(&ftdi, buf + read, to_read - read);
+      last_read = ftdi_read_data(ftdi, buf + read, to_read - read);
       if (last_read > 0)
          read += last_read;
    } 
@@ -292,7 +300,7 @@ void FTDIDevice::shift(int nbits, unsigned char *buffer, unsigned char *result) 
       }
 
       // send the created command list
-      ftdi_write_data(&ftdi, ftdi_cmd, wr_ptr);
+      ftdi_write_data(ftdi, ftdi_cmd, wr_ptr);
 
       // read the response
       readBytes(rd_len, ftdi_res);

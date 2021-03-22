@@ -21,7 +21,7 @@ INCLUDE_LIB = $(foreach includedir,$(INCLUDE_LIB_DIRS),-L$(includedir))
 # Set compiler, preprocesor and linker flags
 CPPFLAGS += -O3 -Wall -Wno-unused-result
 LDFLAGS += $(INCLUDE_LIB)
-LDLIBS += -lusb -lftdi
+LDLIBS += -lusb -lftdi1
 
 # use DEBUG=1 to include debugging
 ifdef DEBUG

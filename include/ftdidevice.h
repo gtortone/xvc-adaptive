@@ -7,7 +7,7 @@
 #include <sys/mman.h>
 #include <string.h>
 #include <unistd.h>
-#include <ftdi.h>
+#include <libftdi1/ftdi.h>
 #include <usb.h>
 
 #include "xvcdriver.h"
@@ -43,7 +43,7 @@ typedef struct {
 } data_desc;
 
 public:
-   FTDIDevice(int vid=DEFAULT_VID, int pid=DEFAULT_PID, enum ftdi_interface interface=INTERFACE_A, bool v=false, int dl=0);
+   FTDIDevice(int vid=DEFAULT_VID, int pid=DEFAULT_PID, enum ftdi_interface interface=INTERFACE_A, const char *serial=NULL, bool v=false, int dl=0);
    ~FTDIDevice();
 
    bool detect(void);
@@ -58,7 +58,7 @@ public:
    void shift(int nbits, unsigned char *buffer, unsigned char *result);
 
 private:
-   struct ftdi_context ftdi;
+   struct ftdi_context *ftdi;
    int samplingEdge = NEG_EDGE;
 };
 
