@@ -66,7 +66,7 @@ int main(int argc, const char **argv) {
       OPT_INTEGER(0, "vid", &vid, "set FTDI device Vendor ID (default: 0x0403)", NULL, 0, 0),
       OPT_INTEGER(0, "pid", &pid, "set FTDI device Product ID (default: 0x6010)", NULL, 0, 0),
       OPT_INTEGER(0, "interface", &interface, "set FTDI device JTAG interface (default: 1)", NULL, 0, 0), 
-      OPT_STRING(0, "serial", &serial, "set serial number (defult: none)", NULL, 0, 0),
+      OPT_STRING(0, "serial", &serial, "set serial number (default: none)", NULL, 0, 0),
       OPT_GROUP("FTDI Calibration options"),
       OPT_INTEGER(0, "minfreq", &minfreq, "set min clock frequency for calibration (default: 100000 - 100 kHz)", NULL, 0, 0),
       OPT_INTEGER(0, "maxfreq", &maxfreq, "set max clock frequency for calibration (default: 30000000 - 30 MHz)", NULL, 0, 0),
