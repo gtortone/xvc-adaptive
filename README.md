@@ -45,6 +45,8 @@ FTDI Calibration options
 FTDI Quick Setup options
     --cfreq=<int>             set FTDI clock frequency
     --pedge                   set FTDI TDO positive sampling edge (default: 0 - negative)
+
+Define AXIJTAG_UIO_ID environment variable to specify UIO device file id (default: 1 => /dev/uio1)
 ```
 
 ## Build
