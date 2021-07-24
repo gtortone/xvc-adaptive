@@ -5,8 +5,21 @@ AXIDevice::AXIDevice(bool v, int dl) {
    setName("AXI");
    verbose = v;
    debugLevel = dl;
+   const char *uioid = getenv("AXIJTAG_UIO_ID");
+   std::string uiodev;   
 
-   fd = open("/dev/uio0", O_RDWR);
+   if(uioid != NULL)
+      uiodev = "/dev/uio" + std::string(uioid);
+   else
+      uiodev = "/dev/uio1";
+
+   if(debugLevel) {
+      char msg[128];
+      sprintf(msg, "AXIDevice: UIO device %s", uiodev.c_str());
+      printDebug(msg, 1);
+   }     
+
+   fd = open(uiodev.c_str(), O_RDWR);
 
    if (fd < 1)
       throw std::runtime_error("E: AXIDevice: failed to open UIO device");

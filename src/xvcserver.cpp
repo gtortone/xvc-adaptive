@@ -79,7 +79,7 @@ int main(int argc, const char **argv) {
 
    struct argparse argparse;
    argparse_init(&argparse, options, usage, 0);
-   argparse_describe(&argparse, "\nXilinx Virtual Cable (XVC) adaptive server", "");
+   argparse_describe(&argparse, "\nXilinx Virtual Cable (XVC) adaptive server", "\nDefine AXIJTAG_UIO_ID environment variable to specify UIO device file id (default: 1 => /dev/uio1)\n\n");
    argparse_parse(&argparse, argc, argv);
 
    std::cout << "I: using driver " << driverName << std::endl;

@@ -78,7 +78,7 @@ uint32_t XVCDriver::probeIdCode(void) {
 
 uint32_t XVCDriver::scanChain(void) {
 
-   printDebug("XVCDriver::scanChain start", 1);
+   printDebug("XVCDriver::scanChain start", 3);
 
    unsigned char buffer[12];
    unsigned char result[6];
@@ -112,6 +112,6 @@ uint32_t XVCDriver::scanChain(void) {
    sprintf(msg, "XVCDriver::scanChain result = 0x%X", idcode32);
    printDebug(msg, 2);
 
-   printDebug("XVCDriver::scanChain end", 1);
+   printDebug("XVCDriver::scanChain end", 3);
    return idcode32; 
 }
