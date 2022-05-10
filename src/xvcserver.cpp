@@ -24,6 +24,7 @@ int main(int argc, const char **argv) {
    const char *saveFilename = NULL;
    const char *loadFilename = NULL;
    const char *serial = NULL;
+   char *busconf = NULL;
    int cdiv = -1;
    int cdel = -1;
    bool quickSetup = false;
@@ -72,6 +73,7 @@ int main(int argc, const char **argv) {
       OPT_INTEGER(0, "pid", &pid, "set FTDI device Product ID (default: 0x6010)", NULL, 0, 0),
       OPT_INTEGER(0, "interface", &interface, "set FTDI device JTAG interface (default: 1)", NULL, 0, 0), 
       OPT_STRING(0, "serial", &serial, "set serial number (default: none)", NULL, 0, 0),
+      OPT_STRING(0, "busconfig", &busconf, "set bus config (default: 0x00:0x0B:0x00:0x00)", NULL, 0, 0),
       OPT_GROUP("FTDI Calibration options"),
       OPT_INTEGER(0, "minfreq", &minfreq, "set min clock frequency for calibration (default: 100000 - 100 kHz)", NULL, 0, 0),
       OPT_INTEGER(0, "maxfreq", &maxfreq, "set max clock frequency for calibration (default: 30000000 - 30 MHz)", NULL, 0, 0),
@@ -98,7 +100,7 @@ int main(int argc, const char **argv) {
       }
    } else if(std::string(driverName) == "FTDI") {
       try {
-         dev.reset(new FTDIDevice(vid, pid, interface, serial, verbose, debugLevel));
+         dev.reset(new FTDIDevice(vid, pid, interface, serial, busconf, verbose, debugLevel));
       } catch (const std::exception& e) {
          std::cout << e.what() << std::endl;
          exit(-1);

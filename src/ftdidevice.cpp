@@ -1,6 +1,7 @@
 #include "ftdidevice.h"
+#include <sstream>
 
-FTDIDevice::FTDIDevice(int vid, int pid, enum ftdi_interface interface, const char *serial, bool v, int dl) {
+FTDIDevice::FTDIDevice(int vid, int pid, enum ftdi_interface interface, const char *serial, char *busconf, bool v, int dl) {
    
    int res = 0;
 
@@ -37,6 +38,28 @@ FTDIDevice::FTDIDevice(int vid, int pid, enum ftdi_interface interface, const ch
 
    ftdi_usb_purge_rx_buffer(ftdi);
    ftdi_usb_purge_tx_buffer(ftdi);
+  
+   std::stringstream ss;
+   if(busconf == nullptr)
+      ss.str("0x00:0x0B:0x00:0x00");
+   else
+      ss.str(busconf);
+
+   std::string tmp;
+   std::vector<unsigned int> mask;
+   while(std::getline((ss), tmp, ':')) {
+      int value = std::stoul(tmp, nullptr, 16);
+      mask.push_back(value);
+   }
+   
+   if(mask.size() < 4) {
+      throw std::runtime_error("E: FTDIDevice bus config error: " + std::string(busconf));
+   }
+
+   buf[2] |= mask[0];   // dbus_data
+   buf[3] |= mask[1];   // dbus_en
+   buf[8] = mask[2];    // cbus_data
+   buf[9] = mask[3];    // cbus_en
 
    if ((res = ftdi_write_data(ftdi, buf, sizeof(buf))) != sizeof(buf)) {
       std::string errmsg(ftdi_get_error_string(ftdi));
