@@ -20,6 +20,7 @@ int main(int argc, const char **argv) {
    int port = 2542;
    bool scan = false;
    int hyst = 0;
+   bool runCalib = false;
    const char *saveFilename = NULL;
    const char *loadFilename = NULL;
    const char *serial = NULL;
@@ -38,6 +39,9 @@ int main(int argc, const char **argv) {
    int loop = 10;
    bool pedge = false;
 
+   AXISetup *asetup = new AXISetup();
+   FTDISetup *fsetup = new FTDISetup();
+
    static const char *const usage[] = {
       "xvcserver [options]",
       NULL,
@@ -53,6 +57,7 @@ int main(int argc, const char **argv) {
       OPT_GROUP("Network options"),
       OPT_INTEGER('p', "port", &port, "set server port (default: 2542)"),
       OPT_GROUP("Calibration options"),
+      OPT_BOOLEAN('r', "runcalib", &runCalib, "start calibration and run server (default: max freq)"),
       OPT_STRING('s', "savecalib", &saveFilename, "start calibration and save data to file", NULL, 0, 0),
       OPT_STRING('l', "loadcalib", &loadFilename, "load calibration data from file", NULL, 0, 0),
       OPT_INTEGER(0, "id", &id, "load calibration entry from file by id"),
@@ -112,10 +117,9 @@ int main(int argc, const char **argv) {
    if(scan)
       exit(0);
 
-   if(saveFilename) {
+   if(runCalib || saveFilename) {
       if(dev.get()->getName() == "AXI") {
-         AXISetup *setup = new AXISetup();
-         setup->setVerbose(verbose);
+         asetup->setVerbose(verbose);
          std::cout << "I: start calibration task" << std::endl;
          AXICalibrator *calib = new AXICalibrator((AXIDevice *) dev.get());
          calib->setDebugLevel(debugLevel);
@@ -124,15 +128,18 @@ int main(int argc, const char **argv) {
             calib->setHysteresis(hyst);
             std::cout << "I: apply hysteresis value " << hyst << std::endl;
          }
-         calib->start(setup);
-         // save calibration data to file
-         setup->saveFile(saveFilename);
-         std::cout << "I: calibration data saved in " << saveFilename << std::endl; 
-         // calibration does not start XVC server
-         exit(0);
+         calib->start(asetup);
+         if(saveFilename) {
+            // save calibration data to file
+            asetup->saveFile(saveFilename);
+            std::cout << "I: calibration data saved in " << saveFilename << std::endl; 
+         } 
+
+         if(!runCalib)
+            exit(0);
+
       } else if(dev.get()->getName() == "FTDI") {
-         FTDISetup *setup = new FTDISetup();
-         setup->setVerbose(verbose);
+         fsetup->setVerbose(verbose);
          std::cout << "I: start calibration task" << std::endl;
          FTDICalibrator *calib = new FTDICalibrator((FTDIDevice *) dev.get());
          calib->setDebugLevel(debugLevel);
@@ -145,12 +152,16 @@ int main(int argc, const char **argv) {
             std::cout << "E: calibration loop must be positive number" << std::endl;
             exit(-1);
          }
-         calib->start(setup, minfreq, maxfreq, loop);
-         // save calibration data to file
-         setup->saveFile(saveFilename);
-         std::cout << "I: calibration data saved in " << saveFilename << std::endl;
-         // calibration does not start XVC server
-         exit(0);
+         calib->start(fsetup, minfreq, maxfreq, loop);
+         if(saveFilename) {
+            // save calibration data to file
+            fsetup->saveFile(saveFilename);
+            std::cout << "I: calibration data saved in " << saveFilename << std::endl;
+         } 
+         if (!runCalib) {
+            exit(0);
+         }
+
       } else std::cout << "E: calibration not supported by driver " << driverName << std::endl;
    }
  
@@ -195,89 +206,79 @@ int main(int argc, const char **argv) {
       goto startServer; 
    }
 
-   if(loadFilename) {
+   if(runCalib || loadFilename) {
       if(dev.get()->getName() == "AXI") {
-         AXISetup *setup = new AXISetup();
-         setup->setVerbose(verbose);
-         bool ret = setup->loadFile(loadFilename);
-         if(ret) {
-
-            AXICalibItem *item;
-
-            std::cout << "I: file " << loadFilename << " loaded successfully" << std::endl;
-            
-            // check for id command line options
-            if(id != -1) {
-            
-               item = setup->getItemById(id);
-               if(item != nullptr) {
-                  AXIDevice *adev = (AXIDevice *) dev.get();
-                  adev->setClockDelay(item->getClockDelay());
-                  adev->setClockDiv(item->getClockDivisor());
-                  std::cout << "I: AXI setup with id " << id << " successfully" << std::endl;
-                  item->print();
-               } else std::cout << "E: setup item with id " << id << " not found" << std::endl;
-               goto startServer;
+         asetup->setVerbose(verbose);
+         if(loadFilename) {
+            if(asetup->loadFile(loadFilename) == 0) {
+               std::cout << "E: file " << loadFilename << " loading error" << std::endl;
+               exit(-1);
             }
-            
-            // check for freq command line options
-            if(freq != -1)
-               item = setup->getItemByFrequency(freq);
-            else  // select max frequency
-               item = setup->getItemByMaxFrequency();
-
-            AXIDevice *adev = (AXIDevice *) dev.get();
-            adev->setClockDelay(item->getClockDelay());
-            adev->setClockDiv(item->getClockDivisor());
-            std::cout << "I: AXI setup with id " << item->getId() << " successfully" << std::endl;
-            item->print();
-
-         } else { 
-            std::cout << "E: file " << loadFilename << " loading error" << std::endl;
-            exit(-1);
+            std::cout << "I: file " << loadFilename << " loaded successfully" << std::endl;
          }
+            
+         AXICalibItem *item = asetup->getItemByMaxFrequency();     // run at max freq by default
+
+         // check for id command line options
+         if(id != -1) {
+         
+            item = asetup->getItemById(id);
+            if(item != nullptr) {
+               AXIDevice *adev = (AXIDevice *) dev.get();
+               adev->setClockDelay(item->getClockDelay());
+               adev->setClockDiv(item->getClockDivisor());
+               std::cout << "I: AXI setup with id " << id << " successfully" << std::endl;
+               item->print();
+            } else std::cout << "E: setup item with id " << id << " not found" << std::endl;
+            goto startServer;
+         }
+         
+         // check for freq command line options
+         if(freq != -1)
+            item = asetup->getItemByFrequency(freq);
+
+         AXIDevice *adev = (AXIDevice *) dev.get();
+         adev->setClockDelay(item->getClockDelay());
+         adev->setClockDiv(item->getClockDivisor());
+         std::cout << "I: AXI setup with id " << item->getId() << " successfully" << std::endl;
+         item->print();
 
       }  else if(dev.get()->getName() == "FTDI") {
 
-         FTDISetup *setup = new FTDISetup();
-         setup->setVerbose(verbose);
-         bool ret = setup->loadFile(loadFilename);
-         if(ret) {
-
-            FTDICalibItem *item;
-
-            std::cout << "I: file " << loadFilename << " loaded successfully" << std::endl;
-            
-            // check for id command line options
-            if(id != -1) {
-            
-               item = setup->getItemById(id);
-               if(item != nullptr) {
-                  FTDIDevice *fdev = (FTDIDevice *) dev.get();
-                  fdev->setClockDiv(DIV5_OFF, item->getClockDivisor());
-                  fdev->setTDOPosSampling((bool)item->getTDOSampling());
-                  std::cout << "I: FTDI setup with id " << id << " successfully" << std::endl;
-                  item->print();
-               } else std::cout << "E: setup item with id " << id << " not found" << std::endl;
-               goto startServer;
+         fsetup->setVerbose(verbose);
+         if(loadFilename) {
+            if(fsetup->loadFile(loadFilename) == 0) {
+               std::cout << "E: file " << loadFilename << " loading error" << std::endl;
+               exit(-1);
             }
-            
-            // check for freq command line options
-            if(freq != -1)
-               item = setup->getItemByFrequency(freq);
-            else  // select max frequency
-               item = setup->getItemByMaxFrequency();
-
-            FTDIDevice *fdev = (FTDIDevice *) dev.get();
-            fdev->setClockDiv(DIV5_OFF, item->getClockDivisor());
-            fdev->setTDOPosSampling((bool)item->getTDOSampling());
-            std::cout << "I: FTDI setup with id " << item->getId() << " successfully" << std::endl;
-            item->print();
-
-         } else { 
-            std::cout << "E: file " << loadFilename << " loading error" << std::endl;
-            exit(-1);
+            std::cout << "I: file " << loadFilename << " loaded successfully" << std::endl;
          }
+
+         FTDICalibItem *item = fsetup->getItemByMaxFrequency();     // run at max freq by default
+
+         // check for id command line options
+         if(id != -1) {
+         
+            item = fsetup->getItemById(id);
+            if(item != nullptr) {
+               FTDIDevice *fdev = (FTDIDevice *) dev.get();
+               fdev->setClockDiv(DIV5_OFF, item->getClockDivisor());
+               fdev->setTDOPosSampling((bool)item->getTDOSampling());
+               std::cout << "I: FTDI setup with id " << id << " successfully" << std::endl;
+               item->print();
+            } else std::cout << "E: setup item with id " << id << " not found" << std::endl;
+            goto startServer;
+         }
+         
+         // check for freq command line options
+         if(freq != -1)
+            item = fsetup->getItemByFrequency(freq);
+
+         FTDIDevice *fdev = (FTDIDevice *) dev.get();
+         fdev->setClockDiv(DIV5_OFF, item->getClockDivisor());
+         fdev->setTDOPosSampling((bool)item->getTDOSampling());
+         std::cout << "I: FTDI setup with id " << item->getId() << " successfully" << std::endl;
+         item->print();
       }
    }
 

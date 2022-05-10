@@ -11,6 +11,15 @@ void FTDISetup::clear(void) {
    calibList.clear();
 }
 
+void FTDISetup::finalize(void) {
+
+   std::vector<FTDICalibItem>::iterator it;
+   int id = calibList.size() - 1;
+
+   for(it=calibList.begin(); it!=calibList.end(); it++)
+      it->setId(id--);
+}
+
 bool FTDISetup::loadFile(std::string filename) {
    
    char id[64], clkDiv[64], tdoSam[64], clkFreq[64];
@@ -18,6 +27,7 @@ bool FTDISetup::loadFile(std::string filename) {
    fp = fopen(filename.c_str(),"rt");
    if(fp) {
 
+      clear();
       while(!feof(fp)) {
 
          int i;
@@ -81,7 +91,7 @@ FTDICalibItem * FTDISetup::getItemById(int id) {
    std::vector<FTDICalibItem>::iterator it;
 
    for(it=calibList.begin(); it!=calibList.end(); it++) {
-      if(it->getId() == id) {
+      if(id == it->getId()) {
          found = true;
          break;
       }

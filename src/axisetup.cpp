@@ -11,6 +11,15 @@ void AXISetup::clear(void) {
    calibList.clear();
 }
 
+void AXISetup::finalize(void) {
+
+   std::vector<AXICalibItem>::iterator it;
+   int id = calibList.size() - 1;
+
+   for(it=calibList.begin(); it!=calibList.end(); it++)
+      it->setId(id--);
+}
+
 bool AXISetup::loadFile(std::string filename) {
    
    char id[64], clkDiv[64], clkDelay[64], clkFreq[64], validPoints[64], eyeWidth[64];
@@ -18,6 +27,7 @@ bool AXISetup::loadFile(std::string filename) {
    fp = fopen(filename.c_str(),"rt");
    if(fp) {
 
+      clear();
       while(!feof(fp)) {
 
          int i;
@@ -84,7 +94,7 @@ AXICalibItem * AXISetup::getItemById(int id) {
    std::vector<AXICalibItem>::iterator it;
 
    for(it=calibList.begin(); it!=calibList.end(); it++) {
-      if(it->getId() == id) {
+      if(id == it->getId()) {
          found = true;
          break;
       }

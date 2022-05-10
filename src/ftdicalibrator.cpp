@@ -77,6 +77,8 @@ void FTDICalibrator::start(FTDISetup *setup, int minFreq, int maxFreq, int loop)
       }
    }
 
+   setup->finalize();
+
    std::cout << std::endl;
    printDebug("FTDICalibrator::start end", 1);
    std::cout << "I: calibration finished" << std::endl;

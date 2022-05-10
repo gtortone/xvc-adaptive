@@ -48,6 +48,7 @@ public:
    void setVerbose(bool v) { verbose = v; };
    void addItem(AXICalibItem &item);
    void clear(void);
+   void finalize(void);
 
    bool loadFile(std::string filename);
    bool saveFile(std::string filename);

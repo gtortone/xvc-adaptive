@@ -122,6 +122,10 @@ void AXICalibrator::start(AXISetup *setup) {
 
    } // end for loop (clock divisor)
 
+   setup->finalize();
+
    printDebug("AXICalibrator::start end", 1);
    std::cout << "I: calibration finished" << std::endl;
 }
+
+
