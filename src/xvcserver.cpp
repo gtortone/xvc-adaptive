@@ -218,6 +218,10 @@ int main(int argc, const char **argv) {
          }
             
          AXICalibItem *item = asetup->getItemByMaxFrequency();     // run at max freq by default
+         if(item == nullptr) {
+            std::cout << "E: no valid calibration setting found" << std::endl;
+            exit(-1);
+         }
 
          // check for id command line options
          if(id != -1) {
@@ -255,6 +259,10 @@ int main(int argc, const char **argv) {
          }
 
          FTDICalibItem *item = fsetup->getItemByMaxFrequency();     // run at max freq by default
+         if(item == nullptr) {
+            std::cout << "E: no valid calibration setting found" << std::endl;
+            exit(-1);
+         }
 
          // check for id command line options
          if(id != -1) {
