@@ -1,4 +1,5 @@
 #include "ioserver.h"
+#include <arpa/inet.h>
 
 IOServer::IOServer(XVCDriver *driver) {
 
@@ -103,8 +104,11 @@ void IOServer::start(void) {
 
                newfd = accept(sock, (struct sockaddr *)&address, &nsize);
 
-               if (verbose)
-                  std::cout << "IOServer: connection accepted - fd " << newfd << std::endl;
+               if (verbose) {
+                  char clntName[INET_ADDRSTRLEN];
+                  inet_ntop(AF_INET,&address.sin_addr.s_addr,clntName,sizeof(clntName));
+                  std::cout << "IOServer: connection accepted - fd " << newfd << " (" << clntName << ")" << std::endl;
+               }
 
                if (newfd < 0) {
 
@@ -126,8 +130,11 @@ void IOServer::start(void) {
             
             } else if (handleData(fd)) {
 
-               if (verbose)
-                  std::cout << "IOServer: connection closed - fd " << fd << std::endl;
+               if (verbose) {
+                  char clntName[INET_ADDRSTRLEN];
+                  inet_ntop(AF_INET,&address.sin_addr.s_addr,clntName,sizeof(clntName));
+                  std::cout << "IOServer: connection closed - fd " << fd << " (" << clntName << ")" << std::endl;
+               }
 
                close(fd);
 
