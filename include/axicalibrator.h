@@ -21,7 +21,7 @@ public:
    void setVerbose(bool v) { verbose = v; };
 
    void setHysteresis(int v) { hyst = v; };
-   void start(AXISetup *setup);
+   void start(AXISetup *setup, unsigned int calibSize);
 
 private:
    AXIDevice *dev;

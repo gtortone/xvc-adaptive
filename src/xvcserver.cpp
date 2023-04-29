@@ -21,6 +21,7 @@ int main(int argc, const char **argv) {
    bool scan = false;
    int hyst = 0;
    bool runCalib = false;
+   unsigned int quickCalib = 0;
    const char *saveFilename = NULL;
    const char *loadFilename = NULL;
    const char *serial = NULL;
@@ -59,6 +60,7 @@ int main(int argc, const char **argv) {
       OPT_INTEGER('p', "port", &port, "set server port (default: 2542)"),
       OPT_GROUP("Calibration options"),
       OPT_BOOLEAN('r', "runcalib", &runCalib, "start calibration and run server (default: max freq)"),
+      OPT_INTEGER('q', "quick", &quickCalib, "enable quick mode with max probe values"),
       OPT_STRING('s', "savecalib", &saveFilename, "start calibration and save data to file", NULL, 0, 0),
       OPT_STRING('l', "loadcalib", &loadFilename, "load calibration data from file", NULL, 0, 0),
       OPT_INTEGER(0, "id", &id, "load calibration entry from file by id"),
@@ -130,7 +132,7 @@ int main(int argc, const char **argv) {
             calib->setHysteresis(hyst);
             std::cout << "I: apply hysteresis value " << hyst << std::endl;
          }
-         calib->start(asetup);
+         calib->start(asetup, quickCalib);
          if(saveFilename) {
             // save calibration data to file
             asetup->saveFile(saveFilename);

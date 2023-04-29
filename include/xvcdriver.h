@@ -2,6 +2,7 @@
 #define XVCDRIVER_H
 
 #include <iostream>
+#include <vector>
 #include <stdio.h>
 
 /*
@@ -22,6 +23,9 @@ public:
    virtual void shift(int nbits, unsigned char *buffer, unsigned char *result) = 0;
    uint32_t scanChain(void);
    uint32_t probeIdCode(void);
+   void startBypass(void);
+   uint32_t probeBypass(const uint32_t value); 
+   std::vector<uint32_t> probeBypass(const std::vector<uint32_t> data);
    bool isDetected(void) { return detected; };
 
    uint32_t getIdCode(void) { return idcode; };

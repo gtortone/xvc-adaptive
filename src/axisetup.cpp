@@ -7,6 +7,22 @@ void AXISetup::addItem(AXICalibItem &item) {
    calibList.push_back(item);
 }
 
+void AXISetup::delItemById(int id) {
+   for(unsigned int i=0; i<calibList.size(); i++) {
+      if (calibList[i].getId() == id) {
+         calibList.erase(calibList.begin() + i);
+         break;
+      }
+   }
+}
+
+AXICalibItem * AXISetup::getItemByIndex(unsigned int index) {
+   if (index > calibList.size() - 1)
+      return nullptr;
+
+   return &calibList[index];
+}
+
 void AXISetup::clear(void) {
    calibList.clear();
 }
@@ -93,6 +109,9 @@ AXICalibItem * AXISetup::getItemById(int id) {
    bool found = false;
    std::vector<AXICalibItem>::iterator it;
 
+   if(calibList.size() == 0)
+      return nullptr;
+
    for(it=calibList.begin(); it!=calibList.end(); it++) {
       if(id == it->getId()) {
          found = true;
@@ -118,6 +137,9 @@ AXICalibItem * AXISetup::getItemByFrequency(int freq) {
    int index = 0;
    int delta = 0;
    bool init = false;
+
+   if(calibList.size() == 0)
+      return nullptr;
 
    for(i=0; i<calibList.size(); i++) {
       
@@ -146,6 +168,9 @@ AXICalibItem * AXISetup::getItemByMaxFrequency(void) {
    unsigned int i = 0;
    int maxfreq = 0;
    int index = 0;
+
+   if(calibList.size() == 0)
+      return nullptr;
 
    for(i=0; i<calibList.size(); i++) {
 

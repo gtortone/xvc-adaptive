@@ -46,7 +46,9 @@ public:
    ~AXISetup();
 
    void setVerbose(bool v) { verbose = v; };
+   int getListSize(void) { return calibList.size(); };
    void addItem(AXICalibItem &item);
+   void delItemById(int id);
    void clear(void);
    void finalize(void);
 
@@ -56,6 +58,7 @@ public:
 
    void print(void);
    AXICalibItem * getItemById(int id);
+   AXICalibItem * getItemByIndex(unsigned int index);
    AXICalibItem * getItemByFrequency(int freq);
    AXICalibItem * getItemByMaxFrequency(void);
 
