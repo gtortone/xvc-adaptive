@@ -19,6 +19,8 @@ Network options
     -p, --port=<int>          set server port (default: 2542)
 
 Calibration options
+    -r, --runcalib            start calibration and run server (default: max freq)
+    -q, --quick=<int>         enable quick mode with max probe values
     -s, --savecalib=<str>     start calibration and save data to file
     -l, --loadcalib=<str>     load calibration data from file
     --id=<int>                load calibration entry from file by id
@@ -36,6 +38,7 @@ FTDI options
     --pid=<int>               set FTDI device Product ID (default: 0x6010)
     --interface=<int>         set FTDI device JTAG interface (default: 1)
     --serial=<str>            set serial number (default: none)
+    --busconfig=<str>         set bus config (default: 0x00:0x0B:0x00:0x00)
 
 FTDI Calibration options
     --minfreq=<int>           set min clock frequency for calibration (default: 100000 - 100 kHz)
