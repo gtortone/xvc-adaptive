@@ -1,5 +1,7 @@
 #include "ioserver.h"
+#include <signal.h>
 #include <arpa/inet.h>
+#include <cstring>
 
 IOServer::IOServer(XVCDriver *driver) {
 
@@ -37,7 +39,8 @@ void IOServer::setVectorLength(int v) {
 
    xvcInfo.clear();
    xvcInfo = "xvcServer_v1.0:";
-   xvcInfo.append(std::to_string(vectorLength/2));
+   //xvcInfo.append(std::to_string(vectorLength/2));
+   xvcInfo.append(std::to_string(vectorLength));
    xvcInfo.append("\n");
 }
 
@@ -63,6 +66,7 @@ int IOServer::sread(int fd, void *target, int len) {
 
 void IOServer::start(void) {
 
+   signal(SIGPIPE, SIG_IGN);
    sock = socket(AF_INET, SOCK_STREAM, 0);
 
    if(sock < 0) 
@@ -244,7 +248,6 @@ bool IOServer::handleData(int fd) {
          return 1;
       }
 
-
       if (sread(fd, buffer, nbytes * 2) != 1) {
          std::cout << "E: IOServer: reading data failed " << std::endl;
          return 1;
@@ -257,9 +260,14 @@ bool IOServer::handleData(int fd) {
       }
 
       drv->shift(nbits, buffer, result);
+
+      //sleep(1);
+      //std::cout << "recv/send: " << nbytes << std::endl;
       
-      if (write(fd, result, nbytes) != nbytes) 
-         std::cout << "E: IOServer: failed to write data to client" << std::endl;
+      int nb;
+      nb = write(fd, result, nbytes);
+      if (nb != nbytes) 
+         std::cout << "E: IOServer: failed to write data to client - " << nb << " (expected: " << nbytes << ") errno: " << std::strerror(errno) << std::endl;
 
    } // end while
 
